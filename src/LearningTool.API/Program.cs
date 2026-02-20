@@ -72,10 +72,12 @@ builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IUserSkillRepository, UserSkillRepository>();
 builder.Services.AddScoped<IUserTopicRepository, UserTopicRepository>();
 builder.Services.AddScoped<IUserCourseRepository, UserCourseRepository>();
+builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 
 // Service registration
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
 builder.Services.AddScoped<IUserLearningService, UserLearningService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 // CORS configuration
 builder.Services.AddCors(options =>

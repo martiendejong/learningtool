@@ -147,12 +147,8 @@ public class LearningToolDbContext : IdentityDbContext<IdentityUser>
             entity.Property(e => e.Timestamp).IsRequired();
 
             // Store ToolCalls as JSON
-            entity.Property(e => e.ToolCalls)
-                .HasConversion(
-                    v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                    v => v == null ? null : JsonSerializer.Deserialize<List<ToolCall>>(v, (JsonSerializerOptions?)null)
-                )
-                .HasColumnType("TEXT");
+            // ToolCalls is stored as JSON string
+            entity.Property(e => e.ToolCalls).HasColumnType("TEXT");
         });
     }
 }
