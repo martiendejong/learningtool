@@ -1,0 +1,15 @@
+C:\Projects\learningtool\src\LearningTool.Application\bin\Debug\net8.0\LearningTool.Application.deps.json
+C:\Projects\learningtool\src\LearningTool.Application\bin\Debug\net8.0\LearningTool.Application.dll
+C:\Projects\learningtool\src\LearningTool.Application\bin\Debug\net8.0\LearningTool.Application.pdb
+C:\Projects\learningtool\src\LearningTool.Application\bin\Debug\net8.0\LearningTool.Domain.dll
+C:\Projects\learningtool\src\LearningTool.Application\bin\Debug\net8.0\LearningTool.Domain.pdb
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\LearningTool.Application.csproj.AssemblyReference.cache
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\LearningTool.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\LearningTool.Application.AssemblyInfoInputs.cache
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\LearningTool.Application.AssemblyInfo.cs
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\LearningTool.Application.csproj.CoreCompileInputs.cache
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\Learning.F1CB7929.Up2Date
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\LearningTool.Application.dll
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\refint\LearningTool.Application.dll
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\LearningTool.Application.pdb
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\ref\LearningTool.Application.dll
