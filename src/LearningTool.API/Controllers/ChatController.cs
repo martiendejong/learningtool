@@ -12,13 +12,13 @@ namespace LearningTool.API.Controllers;
 public class ChatController : ControllerBase
 {
     private readonly IChatService _chatService;
-    private readonly KnowledgeService _knowledgeService;
-    private readonly UserLearningService _userLearningService;
+    private readonly IKnowledgeService _knowledgeService;
+    private readonly IUserLearningService _userLearningService;
 
     public ChatController(
         IChatService chatService,
-        KnowledgeService knowledgeService,
-        UserLearningService userLearningService)
+        IKnowledgeService knowledgeService,
+        IUserLearningService userLearningService)
     {
         _chatService = chatService;
         _knowledgeService = knowledgeService;
