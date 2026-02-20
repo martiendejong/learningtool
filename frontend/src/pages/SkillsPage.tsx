@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { knowledgeService, UserSkill } from '../services/knowledgeService';
+import { knowledgeService } from '../services/knowledgeService';
+import type { UserSkill } from '../services/knowledgeService';
 import TreeView from '../components/TreeView';
 
 export default function SkillsPage() {

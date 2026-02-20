@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { authService, AuthResponse } from '../services/authService';
+import { authService } from '../services/authService';
+import type { AuthResponse } from '../services/authService';
 
 interface User {
   id: string;

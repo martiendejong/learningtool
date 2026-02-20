@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { knowledgeService, UserCourse } from '../services/knowledgeService';
+import { knowledgeService } from '../services/knowledgeService';
+import type { UserCourse } from '../services/knowledgeService';
 
 export default function TimelinePage() {
   const [completedCourses, setCompletedCourses] = useState<UserCourse[]>([]);
