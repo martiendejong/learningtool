@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { knowledgeService } from '../services/knowledgeService';
 import { Link } from 'react-router-dom';
+import ChatInterface from '../components/ChatInterface';
 
 export default function ChatPage() {
   const { user } = useAuthStore();
@@ -29,27 +30,13 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">
+    <div className="p-6 h-[calc(100vh-5rem)]">
+      <div className="max-w-6xl mx-auto h-full flex flex-col gap-6">
+        <h1 className="text-3xl font-bold">
           Welcome, {user?.userName || user?.email}!
         </h1>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">AI Learning Assistant</h2>
-          <p className="text-gray-600 mb-4">
-            Hi! I'm your AI learning assistant. What skills would you like to learn today?
-          </p>
-
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm text-blue-900">
-              <strong>Coming soon:</strong> Interactive chat with AI tutor, skill management,
-              course recommendations, and progress tracking.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link to="/skills" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <h3 className="font-semibold text-lg mb-2">My Skills</h3>
             <p className="text-gray-600 text-sm">View and manage your learning goals</p>
@@ -67,6 +54,10 @@ export default function ChatPage() {
             <p className="text-gray-600 text-sm">Courses you've finished</p>
             <p className="text-2xl font-bold mt-4 text-green-600">{stats.completed}</p>
           </Link>
+        </div>
+
+        <div className="flex-1 min-h-0">
+          <ChatInterface />
         </div>
       </div>
     </div>
