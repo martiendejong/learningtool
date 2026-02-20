@@ -145,6 +145,9 @@ if (app.Environment.IsDevelopment())
     {
         var db = scope.ServiceProvider.GetRequiredService<LearningToolDbContext>();
         db.Database.Migrate();
+
+        // Seed initial data
+        await DataSeeder.SeedAsync(db);
     }
 }
 

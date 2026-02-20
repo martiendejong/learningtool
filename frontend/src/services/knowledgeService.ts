@@ -25,14 +25,14 @@ export interface Course {
   description: string;
   prerequisites: string[];
   resourceLinks: ResourceLink[];
-  estimatedHours: number;
+  estimatedMinutes: number;
   createdAt: string;
 }
 
 export interface ResourceLink {
   url: string;
   title: string;
-  type: 'Video' | 'Article' | 'Documentation' | 'Exercise';
+  type: 'YouTube' | 'Article' | 'Documentation' | 'Tutorial' | 'Book';
 }
 
 export interface UserSkill {

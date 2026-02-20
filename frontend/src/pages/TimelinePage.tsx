@@ -125,7 +125,7 @@ export default function TimelinePage() {
                         )}
                         <div className="flex items-center gap-1">
                           <span>⏱️</span>
-                          <span>{course.estimatedHours} hours</span>
+                          <span>{Math.round(course.estimatedMinutes / 60)} hours</span>
                         </div>
                         {course.resourceLinks.length > 0 && (
                           <div className="flex items-center gap-1">
