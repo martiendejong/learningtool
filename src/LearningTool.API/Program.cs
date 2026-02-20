@@ -56,12 +56,13 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
-})
-.AddGoogle(options =>
-{
-    options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
-    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
 });
+// Google OAuth disabled for now - uncomment when ClientId/Secret configured
+//.AddGoogle(options =>
+//{
+//    options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
+//    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+//});
 
 builder.Services.AddAuthorization();
 
