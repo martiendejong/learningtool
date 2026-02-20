@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserSkill, Topic, Course } from '../services/knowledgeService';
 
 interface TreeViewProps {
@@ -9,6 +10,7 @@ interface TreeViewProps {
 }
 
 export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStartCourse }: TreeViewProps) {
+  const navigate = useNavigate();
   const [expandedSkills, setExpandedSkills] = useState<Set<number>>(new Set());
   const [expandedTopics, setExpandedTopics] = useState<Set<number>>(new Set());
 
@@ -149,10 +151,10 @@ export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStart
                                   </div>
                                 </div>
                                 <button
-                                  onClick={() => onStartCourse(course.id)}
+                                  onClick={() => navigate(`/course/${course.id}`)}
                                   className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
                                 >
-                                  Start Course
+                                  View Course
                                 </button>
                               </div>
                             </div>
