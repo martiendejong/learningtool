@@ -1,10 +1,12 @@
 using LearningTool.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace LearningTool.Infrastructure.Data;
 
-public class LearningToolDbContext : DbContext
+public class LearningToolDbContext : IdentityDbContext<IdentityUser>
 {
     public LearningToolDbContext(DbContextOptions<LearningToolDbContext> options)
         : base(options)
