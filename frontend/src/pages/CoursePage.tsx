@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { knowledgeService, Course, UserCourse } from '../services/knowledgeService';
+import { knowledgeService } from '../services/knowledgeService';
+import type { Course, UserCourse } from '../services/knowledgeService';
 
 export default function CoursePage() {
   const { courseId } = useParams<{ courseId: string }>();

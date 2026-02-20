@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { chatService, ChatMessage, ToolResult } from '../services/chatService';
+import { chatService } from '../services/chatService';
+import type { ChatMessage, ToolResult } from '../services/chatService';
 import { useAuthStore } from '../stores/authStore';
 
 export default function ChatInterface() {
