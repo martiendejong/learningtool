@@ -66,14 +66,16 @@ export default function CoursePage() {
 
   const getResourceIcon = (type: string) => {
     switch (type) {
-      case 'Video':
+      case 'YouTube':
         return '🎥';
       case 'Article':
         return '📄';
       case 'Documentation':
         return '📚';
-      case 'Exercise':
+      case 'Tutorial':
         return '💪';
+      case 'Book':
+        return '📖';
       default:
         return '🔗';
     }
@@ -120,7 +122,7 @@ export default function CoursePage() {
           <h1 className="text-3xl font-bold mb-2">{course.name}</h1>
           <p className="text-gray-600">{course.description}</p>
           <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-            <span>⏱️ {course.estimatedHours} hours</span>
+            <span>⏱️ {Math.round(course.estimatedMinutes / 60)} hours</span>
             {course.prerequisites.length > 0 && (
               <span>📋 {course.prerequisites.length} prerequisites</span>
             )}

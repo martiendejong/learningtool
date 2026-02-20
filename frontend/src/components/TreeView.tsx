@@ -138,7 +138,7 @@ export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStart
                                   <p className="text-xs text-gray-500">{course.description}</p>
                                   <div className="flex items-center gap-2 mt-1">
                                     <span className="text-xs text-gray-500">
-                                      {course.estimatedHours}h
+                                      {Math.round(course.estimatedMinutes / 60)}h
                                     </span>
                                     {course.prerequisites.length > 0 && (
                                       <span className="text-xs text-orange-600">
