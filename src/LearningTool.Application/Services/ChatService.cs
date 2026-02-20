@@ -15,13 +15,13 @@ public interface IChatService
 public class ChatService : IChatService
 {
     private readonly IChatMessageRepository _chatMessageRepository;
-    private readonly KnowledgeService _knowledgeService;
-    private readonly UserLearningService _userLearningService;
+    private readonly IKnowledgeService _knowledgeService;
+    private readonly IUserLearningService _userLearningService;
 
     public ChatService(
         IChatMessageRepository chatMessageRepository,
-        KnowledgeService knowledgeService,
-        UserLearningService userLearningService)
+        IKnowledgeService knowledgeService,
+        IUserLearningService userLearningService)
     {
         _chatMessageRepository = chatMessageRepository;
         _knowledgeService = knowledgeService;
