@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserSkill, Topic, Course } from '../services/knowledgeService';
+import type { UserSkill, Topic, Course } from '../services/knowledgeService';
 
 interface TreeViewProps {
   skills: UserSkill[];
