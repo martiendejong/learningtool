@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "vzd40rmKmWE=",
+  "success": true,
+  "projectFilePath": "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
+  "expectedPackageFiles": [
+    "E:\\nuget-cache\\.nuget\\microsoft.aspnetcore.openapi\\8.0.22\\microsoft.aspnetcore.openapi.8.0.22.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.openapi\\1.6.14\\microsoft.openapi.1.6.14.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\swashbuckle.aspnetcore\\6.6.2\\swashbuckle.aspnetcore.6.6.2.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\swashbuckle.aspnetcore.swagger\\6.6.2\\swashbuckle.aspnetcore.swagger.6.6.2.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\swashbuckle.aspnetcore.swaggergen\\6.6.2\\swashbuckle.aspnetcore.swaggergen.6.6.2.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\swashbuckle.aspnetcore.swaggerui\\6.6.2\\swashbuckle.aspnetcore.swaggerui.6.6.2.nupkg.sha512"
+  ],
+  "logs": []
+}
