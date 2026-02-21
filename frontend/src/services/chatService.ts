@@ -39,4 +39,13 @@ export const chatService = {
     const response = await api.get<ChatMessage[]>('/chat/history', { params: { limit } });
     return response.data;
   },
+
+  async startCourse(courseId: number): Promise<ChatResponse> {
+    const response = await api.post<ChatResponse>('/chat/start-course', { courseId });
+    return response.data;
+  },
+
+  async clearHistory(): Promise<void> {
+    await api.delete('/chat/history');
+  },
 };

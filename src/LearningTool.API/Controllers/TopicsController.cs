@@ -21,6 +21,17 @@ public class TopicsController : ControllerBase
         _userLearningService = userLearningService;
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetTopicById(int id)
+    {
+        var topic = await _knowledgeService.GetTopicByIdAsync(id);
+        if (topic == null)
+        {
+            return NotFound();
+        }
+        return Ok(topic);
+    }
+
     [HttpGet("skill/{skillId}")]
     public async Task<IActionResult> GetTopicsForSkill(int skillId)
     {

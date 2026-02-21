@@ -4,8 +4,12 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ChatPage from './pages/ChatPage';
 import SkillsPage from './pages/SkillsPage';
+import SkillDetailPage from './pages/SkillDetailPage';
+import TopicDetailPage from './pages/TopicDetailPage';
 import TimelinePage from './pages/TimelinePage';
 import CoursePage from './pages/CoursePage';
+import CourseDetailPage from './pages/CourseDetailPage';
+import AboutPage from './pages/AboutPage';
 import Layout from './components/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -23,8 +27,12 @@ function App() {
           <Route index element={<Navigate to="/chat" />} />
           <Route path="chat" element={<ChatPage />} />
           <Route path="skills" element={<SkillsPage />} />
+          <Route path="skill/:id" element={<SkillDetailPage />} />
+          <Route path="topic/:id" element={<TopicDetailPage />} />
           <Route path="timeline" element={<TimelinePage />} />
           <Route path="course/:courseId" element={<CoursePage />} />
+          <Route path="course-detail/:id" element={<CourseDetailPage />} />
+          <Route path="about" element={<AboutPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -22,7 +22,11 @@ C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.EntityF
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Design.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Sqlite.dll
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.Extensions.Primitives.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
@@ -31,12 +35,14 @@ C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.Identit
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Microsoft.OpenApi.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Mono.TextTemplating.dll
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\OpenAI.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\SQLitePCLRaw.batteries_v2.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\SQLitePCLRaw.core.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\SQLitePCLRaw.provider.e_sqlite3.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.ClientModel.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.CodeDom.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.Composition.AttributedModel.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.Composition.Convention.dll
@@ -44,6 +50,8 @@ C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.Compositio
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.Composition.Runtime.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.Composition.TypedParts.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.Memory.Data.dll
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\System.Net.ServerSentEvents.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
 C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll

@@ -57,8 +57,13 @@ export interface UserCourse {
 
 export const knowledgeService = {
   // Skills catalog
-  async searchSkills(query: string): Promise<Skill[]> {
-    const response = await api.get<Skill[]>('/skills/catalog', { params: { query } });
+  async getAllSkills(): Promise<Skill[]> {
+    const response = await api.get<Skill[]>('/skills/catalog');
+    return response.data;
+  },
+
+  async searchSkills(search: string): Promise<Skill[]> {
+    const response = await api.get<Skill[]>('/skills/catalog', { params: { search } });
     return response.data;
   },
 
@@ -68,9 +73,21 @@ export const knowledgeService = {
     return response.data;
   },
 
-  async addSkill(name: string, description?: string): Promise<UserSkill> {
-    const response = await api.post<UserSkill>('/skills', { name, description });
+  async getSkillById(skillId: number): Promise<Skill> {
+    const response = await api.get<Skill>(`/skills/${skillId}`);
     return response.data;
+  },
+
+  async addSkill(name: string): Promise<UserSkill> {
+    const response = await api.post<UserSkill>('/skills', { skillName: name });
+    return response.data;
+  },
+
+  async addSkillById(skillId: number): Promise<UserSkill> {
+    // For existing skills in catalog, we still use the same endpoint but with skill name
+    // The API will find the skill by ID via the name lookup
+    const skill = await this.getSkillById(skillId);
+    return this.addSkill(skill.name);
   },
 
   async removeSkill(skillId: number): Promise<void> {
@@ -88,6 +105,11 @@ export const knowledgeService = {
     return response.data;
   },
 
+  async getTopicById(topicId: number): Promise<Topic> {
+    const response = await api.get<Topic>(`/topics/${topicId}`);
+    return response.data;
+  },
+
   async addTopic(skillId: number, name: string, description?: string): Promise<Topic> {
     const response = await api.post<Topic>('/topics', { skillId, name, description });
     return response.data;
@@ -100,6 +122,15 @@ export const knowledgeService = {
   // Courses
   async getCourse(courseId: number): Promise<Course> {
     const response = await api.get<Course>(`/courses/${courseId}`);
+    return response.data;
+  },
+
+  async getCourseById(courseId: number): Promise<Course> {
+    return this.getCourse(courseId);
+  },
+
+  async getCoursesForTopic(topicId: number): Promise<Course[]> {
+    const response = await api.get<Course[]>(`/courses/topic/${topicId}`);
     return response.data;
   },
 

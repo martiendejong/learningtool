@@ -22,11 +22,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-center mb-8">LearningTool</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-100">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 border-t-4 border-green-500">
+        <div className="flex flex-col items-center mb-8">
+          <img
+            src="https://prospergenics.com/wp-content/uploads/2026/02/logo_header.png"
+            alt="Prospergenics"
+            className="h-16 mb-4"
+          />
+          <h1 className="text-2xl font-bold text-green-700">Prospergenics Learning</h1>
+          <p className="text-sm text-gray-600">Empowering through education</p>
+        </div>
 
-        <h2 className="text-2xl font-semibold mb-6">Sign In</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">Welcome Back</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -39,7 +47,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="you@example.com"
             />
           </div>
@@ -54,7 +62,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="••••••••"
             />
           </div>
@@ -68,7 +76,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white py-2 px-4 rounded-md hover:shadow-lg hover:from-green-700 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -76,7 +84,7 @@ export default function LoginPage() {
 
         <p className="mt-4 text-center text-sm text-gray-600">
           Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+          <Link to="/register" className="text-green-600 hover:text-green-700 font-medium font-medium">
             Sign up
           </Link>
         </p>

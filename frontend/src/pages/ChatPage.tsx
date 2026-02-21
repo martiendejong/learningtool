@@ -1,16 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { knowledgeService } from '../services/knowledgeService';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import ChatInterface from '../components/ChatInterface';
 
 export default function ChatPage() {
   const { user } = useAuthStore();
+  const location = useLocation();
   const [stats, setStats] = useState({ skills: 0, inProgress: 0, completed: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [courseStarted, setCourseStarted] = useState(false);
 
   useEffect(() => {
     loadStats();
-  }, []);
+
+    // Check if course was started (from CourseDetailPage)
+    if (location.state?.courseStarted) {
+      setIsFullscreen(true);
+      setCourseStarted(true);
+      // Clear the state so it doesn't trigger again
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   const loadStats = async () => {
     try {
@@ -29,12 +40,41 @@ export default function ChatPage() {
     }
   };
 
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gradient-to-br from-gray-50 to-green-50">
+        <div className="h-full flex flex-col">
+          <div className="bg-white shadow-lg border-b-4 border-green-500 px-6 py-3 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-green-700">Chat - Fullscreen Mode</h2>
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-md hover:shadow-lg transition-all font-medium"
+            >
+              ⬇ Exit Fullscreen
+            </button>
+          </div>
+          <div className="flex-1 min-h-0">
+            <ChatInterface scrollToTop={courseStarted} onScrollComplete={() => setCourseStarted(false)} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 h-[calc(100vh-5rem)]">
       <div className="max-w-6xl mx-auto h-full flex flex-col gap-6">
-        <h1 className="text-3xl font-bold">
-          Welcome, {user?.userName || user?.email}!
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">
+            Welcome, {user?.userName || user?.email}!
+          </h1>
+          <button
+            onClick={() => setIsFullscreen(true)}
+            className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-md hover:shadow-lg transition-all font-medium"
+          >
+            ⬆ Fullscreen Chat
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link to="/skills" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
@@ -57,7 +97,7 @@ export default function ChatPage() {
         </div>
 
         <div className="flex-1 min-h-0">
-          <ChatInterface />
+          <ChatInterface scrollToTop={courseStarted} onScrollComplete={() => setCourseStarted(false)} />
         </div>
       </div>
     </div>

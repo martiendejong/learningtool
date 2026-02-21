@@ -57,4 +57,17 @@ public class ChatMessageRepository : IChatMessageRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task DeleteByUserIdAsync(string userId)
+    {
+        var messages = await _context.ChatMessages
+            .Where(m => m.UserId == userId)
+            .ToListAsync();
+
+        if (messages.Any())
+        {
+            _context.ChatMessages.RemoveRange(messages);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

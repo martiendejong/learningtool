@@ -38,12 +38,28 @@ export default function CoursePage() {
   };
 
   const handleStart = async () => {
-    if (!courseId) return;
+    if (!courseId || !course) return;
 
     try {
+      // Start the course in the backend
       const userCourseData = await knowledgeService.startCourse(parseInt(courseId));
       setUserCourse(userCourseData);
       setError('');
+
+      // Import chatService dynamically to avoid circular dependencies
+      const { chatService } = await import('../services/chatService');
+
+      // Clear chat history
+      await chatService.clearHistory();
+
+      // Navigate to chat with course info
+      navigate('/chat', {
+        state: {
+          startCourse: true,
+          courseId: parseInt(courseId),
+          courseName: course.name
+        }
+      });
     } catch (err) {
       console.error('Failed to start course:', err);
       setError('Failed to start course');

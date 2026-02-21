@@ -75,7 +75,19 @@ export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStart
                   {isExpanded ? '▼' : '▶'}
                 </span>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{skill.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg">{skill.name}</h3>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/skill/${skill.id}`);
+                      }}
+                      className="text-blue-600 hover:text-blue-700 text-lg"
+                      title="Go to skill page"
+                    >
+                      →
+                    </button>
+                  </div>
                   <p className="text-sm text-gray-600">{skill.description}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className={`text-xs px-2 py-1 rounded ${getDifficultyColor(skill.difficulty)}`}>
@@ -112,7 +124,19 @@ export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStart
                             {isTopicExpanded ? '▼' : '▶'}
                           </span>
                           <div className="flex-1">
-                            <h4 className="font-medium">{topic.name}</h4>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium">{topic.name}</h4>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/topic/${topic.id}`);
+                                }}
+                                className="text-blue-600 hover:text-blue-700"
+                                title="Go to topic page"
+                              >
+                                →
+                              </button>
+                            </div>
                             <p className="text-xs text-gray-500">{topic.description}</p>
                           </div>
                         </div>
@@ -134,7 +158,16 @@ export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStart
                             <div key={course.id} className="border-l-2 border-green-200 pl-3 py-2 hover:bg-gray-50 rounded">
                               <div className="flex items-center justify-between">
                                 <div className="flex-1">
-                                  <h5 className="font-medium text-sm">{course.name}</h5>
+                                  <div className="flex items-center gap-2">
+                                    <h5 className="font-medium text-sm">{course.name}</h5>
+                                    <button
+                                      onClick={() => navigate(`/course-detail/${course.id}`)}
+                                      className="text-blue-600 hover:text-blue-700"
+                                      title="Go to course page"
+                                    >
+                                      →
+                                    </button>
+                                  </div>
                                   <p className="text-xs text-gray-500">{course.description}</p>
                                   <div className="flex items-center gap-2 mt-1">
                                     <span className="text-xs text-gray-500">
@@ -150,12 +183,6 @@ export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStart
                                     </span>
                                   </div>
                                 </div>
-                                <button
-                                  onClick={() => navigate(`/course/${course.id}`)}
-                                  className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-                                >
-                                  View Course
-                                </button>
                               </div>
                             </div>
                           ))}
