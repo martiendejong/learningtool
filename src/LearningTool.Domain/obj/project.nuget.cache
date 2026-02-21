@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "J+fPwZxBZHo=",
+  "dgSpecHash": "3cPYnEqFtQI=",
   "success": true,
-  "projectFilePath": "C:\\Projects\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj",
+  "projectFilePath": "C:\\Projects\\worker-agents\\agent-005\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

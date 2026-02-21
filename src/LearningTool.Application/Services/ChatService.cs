@@ -17,6 +17,11 @@ public interface IChatService
     Task<ChatResponse> ProcessMessageAsync(string userId, string message);
     Task<List<DomainChatMessage>> GetChatHistoryAsync(string userId, int limit = 50);
     Task ClearChatHistoryAsync(string userId);
+
+    // Course-specific chat methods
+    Task<ChatResponse> ProcessCourseMessageAsync(string userId, int courseId, string message);
+    Task<List<DomainChatMessage>> GetCourseChatHistoryAsync(string userId, int courseId, int limit = 50);
+    Task ClearCourseChatHistoryAsync(string userId, int courseId);
 }
 
 public class ChatService : IChatService
@@ -473,5 +478,211 @@ public class ChatService : IChatService
         {
             return $"Error executing {toolCall.ToolName}: {ex.Message}";
         }
+    }
+
+    // Course-specific chat implementation
+    public async Task<ChatResponse> ProcessCourseMessageAsync(string userId, int courseId, string message)
+    {
+        // Save user message with CourseId
+        var userMessage = new DomainChatMessage
+        {
+            UserId = userId,
+            Role = "user",
+            Content = message,
+            CourseId = courseId,
+            Timestamp = DateTime.UtcNow
+        };
+        await _chatMessageRepository.CreateAsync(userMessage);
+
+        // Process message with OpenAI (teaching mode)
+        var response = await GenerateCourseResponseAsync(userId, courseId, message);
+
+        // Save assistant message with CourseId
+        var assistantMessage = new DomainChatMessage
+        {
+            UserId = userId,
+            Role = "assistant",
+            Content = response.Message,
+            CourseId = courseId,
+            ToolCalls = response.ToolCalls != null ? JsonSerializer.Serialize(response.ToolCalls) : null,
+            Timestamp = DateTime.UtcNow
+        };
+        await _chatMessageRepository.CreateAsync(assistantMessage);
+
+        return response;
+    }
+
+    public async Task<List<DomainChatMessage>> GetCourseChatHistoryAsync(string userId, int courseId, int limit = 50)
+    {
+        return await _chatMessageRepository.GetByCourseIdAsync(userId, courseId, limit);
+    }
+
+    public async Task ClearCourseChatHistoryAsync(string userId, int courseId)
+    {
+        await _chatMessageRepository.DeleteByCourseIdAsync(userId, courseId);
+    }
+
+    private async Task<ChatResponse> GenerateCourseResponseAsync(string userId, int courseId, string message)
+    {
+        // Initialize OpenAI client
+        var client = new OpenAIClient(new ApiKeyCredential(_apiKey));
+        var chatClient = client.GetChatClient(_model);
+
+        // Get course details
+        var course = await _knowledgeService.GetCourseByIdAsync(courseId);
+        if (course == null)
+        {
+            throw new InvalidOperationException($"Course {courseId} not found");
+        }
+
+        // Get course chat history
+        var history = await GetCourseChatHistoryAsync(userId, courseId, 20);
+
+        // Get user's course progress
+        var userCourse = await _userLearningService.GetUserCourseAsync(userId, courseId);
+
+        // Calculate progress percentage based on time spent vs estimated duration
+        var progressPercentage = userCourse != null && course.EstimatedMinutes > 0
+            ? Math.Min(100, (int)((userCourse.MinutesSpent / (float)course.EstimatedMinutes) * 100))
+            : 0;
+
+        // Build teaching system prompt
+        var teachingPrompt = $@"You are an expert programming teacher teaching the course ""{course.Name}"".
+
+Course Description: {course.Description}
+
+Teaching Guidelines:
+1. Explain concepts clearly with practical code examples
+2. Use markdown code blocks with syntax highlighting (```language)
+3. Break down complex topics into simple steps
+4. Ask comprehension questions to test understanding
+5. Provide exercises for practice
+6. Be patient and encouraging
+
+Student Progress: {progressPercentage}% complete
+Started: {(userCourse?.StartedAt?.ToString("yyyy-MM-dd") ?? "Just now")}
+
+Focus on teaching step-by-step with real code examples that the student can understand and try.";
+
+        // Build messages array
+        var messages = new List<OpenAIChatMessage>();
+        messages.Add(OpenAIChatMessage.CreateSystemMessage(teachingPrompt));
+
+        // Add conversation history
+        foreach (var historyMsg in history.OrderBy(m => m.Timestamp))
+        {
+            if (historyMsg.Role == "user")
+            {
+                messages.Add(OpenAIChatMessage.CreateUserMessage(historyMsg.Content));
+            }
+            else if (historyMsg.Role == "assistant")
+            {
+                messages.Add(OpenAIChatMessage.CreateAssistantMessage(historyMsg.Content));
+            }
+        }
+
+        // Add current user message
+        messages.Add(OpenAIChatMessage.CreateUserMessage(message));
+
+        // Define teaching tools
+        var tools = new List<ChatTool>
+        {
+            ChatTool.CreateFunctionTool(
+                functionName: "get_course_content",
+                functionDescription: "Retrieve the full course content and structure",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "section": {
+                            "type": "string",
+                            "description": "Optional specific section to retrieve"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+                """)
+            ),
+            ChatTool.CreateFunctionTool(
+                functionName: "mark_section_complete",
+                functionDescription: "Mark a course section as completed by the student",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "sectionName": {
+                            "type": "string",
+                            "description": "The name of the section completed"
+                        }
+                    },
+                    "required": ["sectionName"],
+                    "additionalProperties": false
+                }
+                """)
+            ),
+            ChatTool.CreateFunctionTool(
+                functionName: "get_student_progress",
+                functionDescription: "Get detailed progress information for this course",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": false
+                }
+                """)
+            )
+        };
+
+        // Create chat completion options
+        var options = new ChatCompletionOptions
+        {
+            MaxOutputTokenCount = 1500,  // More tokens for detailed teaching
+            Temperature = 0.7f
+        };
+
+        foreach (var tool in tools)
+        {
+            options.Tools.Add(tool);
+        }
+
+        // Call OpenAI API
+        var completion = await chatClient.CompleteChatAsync(messages, options);
+
+        var responseMessage = completion.Value.Content[0].Text;
+        var toolCalls = new List<DTOToolCall>();
+
+        // Check if the model wants to call functions
+        if (completion.Value.FinishReason == ChatFinishReason.ToolCalls)
+        {
+            foreach (var toolCall in completion.Value.ToolCalls)
+            {
+                var functionToolCall = toolCall as ChatToolCall;
+                if (functionToolCall != null)
+                {
+                    var args = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                        functionToolCall.FunctionArguments.ToString());
+
+                    toolCalls.Add(new DTOToolCall
+                    {
+                        Id = functionToolCall.Id,
+                        ToolName = functionToolCall.FunctionName,
+                        Arguments = args ?? new Dictionary<string, object>()
+                    });
+                }
+            }
+
+            return new ChatResponse
+            {
+                Message = responseMessage,
+                ToolCalls = toolCalls,
+                RequiresAction = true
+            };
+        }
+
+        return new ChatResponse
+        {
+            Message = responseMessage,
+            RequiresAction = false
+        };
     }
 }

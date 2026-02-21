@@ -70,4 +70,27 @@ public class ChatMessageRepository : IChatMessageRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task<List<ChatMessage>> GetByCourseIdAsync(string userId, int courseId, int limit = 50)
+    {
+        return await _context.ChatMessages
+            .Where(m => m.UserId == userId && m.CourseId == courseId)
+            .OrderByDescending(m => m.Timestamp)
+            .Take(limit)
+            .OrderBy(m => m.Timestamp)
+            .ToListAsync();
+    }
+
+    public async Task DeleteByCourseIdAsync(string userId, int courseId)
+    {
+        var messages = await _context.ChatMessages
+            .Where(m => m.UserId == userId && m.CourseId == courseId)
+            .ToListAsync();
+
+        if (messages.Any())
+        {
+            _context.ChatMessages.RemoveRange(messages);
+            await _context.SaveChangesAsync();
+        }
+    }
 }
