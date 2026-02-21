@@ -5,10 +5,17 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/)
 [![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6)](https://www.typescriptlang.org/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991)](https://openai.com/)
+
+## 🌐 Live Demo
+
+**Production:** [http://learning.prospergenics.com](http://learning.prospergenics.com)
+**API Docs:** [http://learning.prospergenics.com/api/swagger](http://learning.prospergenics.com/api/swagger)
+**Repository:** [github.com/martiendejong/learningtool](https://github.com/martiendejong/learningtool)
 
 ## ✨ Features
 
-- 🤖 **AI Chat Assistant** - Natural language conversation with tool calling
+- 🤖 **AI Chat Assistant** - Powered by OpenAI GPT-4o-mini with tool calling
 - 📚 **Knowledge Hierarchy** - Skills → Topics → Courses structure
 - 🎯 **Progress Tracking** - Monitor your learning journey
 - 📊 **Two Visualization Views** - Tree view and timeline
@@ -29,7 +36,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/martiendejong/learningtool.git
    cd learningtool
    ```
 
@@ -216,19 +223,50 @@ VITE_API_URL=https://localhost:5001/api
 
 ## 🚢 Deployment
 
-### Backend
+### Production Environment
+
+**Server:** Windows Server (IIS 10.0)
+**URL:** http://learning.prospergenics.com
+**Status:** Live and operational
+
+### Automated Deployment
+
+Use the automated deployment script:
+```bash
+python deploy-complete.py
+```
+
+This script:
+- Uploads files via SFTP
+- Configures IIS application pool and website
+- Sets up domain binding
+- Verifies deployment
+
+See [DEPLOYMENT_SUCCESS.md](DEPLOYMENT_SUCCESS.md) for full deployment documentation.
+
+### Manual Deployment
+
+#### Backend
 ```bash
 cd src/LearningTool.API
 dotnet publish -c Release
 ```
 
-### Frontend
+#### Frontend
 ```bash
 cd frontend
 npm run build
 ```
 
-Deploy the `dist/` folder to your hosting service.
+Deploy the `dist/` folder and `publish/` folder to your hosting service.
+
+### Environment Variables
+
+Production secrets are stored in GitHub Secrets:
+- `OPENAI_API_KEY` - OpenAI API key for GPT-4o-mini
+- `JWT_SECRET_KEY` - JWT signing key
+
+See `appsettings.example.json` for configuration template.
 
 ## 🤝 Contributing
 
