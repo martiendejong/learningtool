@@ -9,3 +9,15 @@ C:\Projects\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\LearningTool.D
 C:\Projects\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\refint\LearningTool.Domain.dll
 C:\Projects\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\LearningTool.Domain.pdb
 C:\Projects\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\ref\LearningTool.Domain.dll
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\bin\Debug\net8.0\LearningTool.Domain.deps.json
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\bin\Debug\net8.0\LearningTool.Domain.dll
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\bin\Debug\net8.0\LearningTool.Domain.pdb
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\LearningTool.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\LearningTool.Domain.AssemblyInfoInputs.cache
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\LearningTool.Domain.AssemblyInfo.cs
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\LearningTool.Domain.csproj.CoreCompileInputs.cache
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\LearningTool.Domain.sourcelink.json
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\LearningTool.Domain.dll
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\refint\LearningTool.Domain.dll
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\LearningTool.Domain.pdb
+C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Domain\obj\Debug\net8.0\ref\LearningTool.Domain.dll

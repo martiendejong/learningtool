@@ -141,6 +141,7 @@ public class LearningToolDbContext : IdentityDbContext<IdentityUser>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.CourseId });  // Index for course-specific chat queries
             entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
             entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Content).IsRequired().HasColumnType("TEXT");
@@ -149,6 +150,12 @@ public class LearningToolDbContext : IdentityDbContext<IdentityUser>
             // Store ToolCalls as JSON
             // ToolCalls is stored as JSON string
             entity.Property(e => e.ToolCalls).HasColumnType("TEXT");
+
+            // Course relationship (optional - null for general chat)
+            entity.HasOne(e => e.Course)
+                .WithMany()
+                .HasForeignKey(e => e.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
