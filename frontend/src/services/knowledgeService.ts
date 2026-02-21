@@ -23,6 +23,7 @@ export interface Course {
   topicId: number;
   name: string;
   description: string;
+  content?: string;  // Course content for teaching
   prerequisites: string[];
   resourceLinks: ResourceLink[];
   estimatedMinutes: number;

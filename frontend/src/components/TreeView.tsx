@@ -9,7 +9,7 @@ interface TreeViewProps {
   onStartCourse: (courseId: number) => void;
 }
 
-export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStartCourse }: TreeViewProps) {
+export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStartCourse: _onStartCourse }: TreeViewProps) {
   const navigate = useNavigate();
   const [expandedSkills, setExpandedSkills] = useState<Set<number>>(new Set());
   const [expandedTopics, setExpandedTopics] = useState<Set<number>>(new Set());

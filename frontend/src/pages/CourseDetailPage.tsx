@@ -34,10 +34,10 @@ export default function CourseDetailPage() {
 
     try {
       setStarting(true);
-      // Clear chat and start course
+      // Start the course
       await chatService.startCourse(course.id);
-      // Navigate to chat
-      navigate('/chat', { state: { courseStarted: true } });
+      // Navigate to course-specific chat page
+      navigate(`/course/${course.id}/learn`);
     } catch (err) {
       console.error('Failed to start course:', err);
       alert('Failed to start course. Please try again.');
