@@ -67,6 +67,48 @@ public class ChatController : ControllerBase
         return Ok(history);
     }
 
+    /// <summary>
+    /// Start a course and add initial message to chat
+    /// </summary>
+    [HttpPost("start-course")]
+    public async Task<ActionResult<ChatResponse>> StartCourse([FromBody] StartCourseRequest request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+
+        // Get course details
+        var course = await _knowledgeService.GetCourseByIdAsync(request.CourseId);
+        if (course == null)
+        {
+            return NotFound(new { message = "Course not found" });
+        }
+
+        // Start course for user
+        await _userLearningService.StartCourseAsync(userId, request.CourseId);
+
+        // Clear chat history for clean start
+        await _chatService.ClearChatHistoryAsync(userId);
+
+        // Create initial chat message
+        var message = $"I want to start the course '{course.Name}'. Please teach me step by step.";
+        var response = await _chatService.ProcessMessageAsync(userId, message);
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Clear chat history
+    /// </summary>
+    [HttpDelete("history")]
+    public async Task<IActionResult> ClearHistory()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+
+        await _chatService.ClearChatHistoryAsync(userId);
+        return Ok(new { message = "Chat history cleared" });
+    }
+
     private async Task<List<ToolResult>> ExecuteToolCallsAsync(string userId, List<ToolCall> toolCalls)
     {
         var results = new List<ToolResult>();
@@ -167,3 +209,5 @@ public class ChatController : ControllerBase
         }
     }
 }
+
+public record StartCourseRequest(int CourseId);

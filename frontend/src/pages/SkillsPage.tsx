@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { knowledgeService } from '../services/knowledgeService';
 import type { UserSkill } from '../services/knowledgeService';
 import TreeView from '../components/TreeView';
+import SkillBrowserModal from '../components/SkillBrowserModal';
 
 export default function SkillsPage() {
   const [skills, setSkills] = useState<UserSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [newSkillName, setNewSkillName] = useState('');
-  const [adding, setAdding] = useState(false);
+  const [showBrowser, setShowBrowser] = useState(false);
 
   useEffect(() => {
     loadSkills();
@@ -28,22 +28,6 @@ export default function SkillsPage() {
     }
   };
 
-  const handleAddSkill = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSkillName.trim()) return;
-
-    try {
-      setAdding(true);
-      await knowledgeService.addSkill(newSkillName);
-      setNewSkillName('');
-      await loadSkills();
-    } catch (err) {
-      console.error('Failed to add skill:', err);
-      setError('Failed to add skill');
-    } finally {
-      setAdding(false);
-    }
-  };
 
   const handleRemoveSkill = async (skillId: number) => {
     if (!confirm('Remove this skill and all its topics and courses?')) return;
@@ -98,26 +82,14 @@ export default function SkillsPage() {
           </p>
         </div>
 
-        {/* Add Skill Form */}
+        {/* Browse Skills Button */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Add New Skill</h2>
-          <form onSubmit={handleAddSkill} className="flex gap-3">
-            <input
-              type="text"
-              value={newSkillName}
-              onChange={(e) => setNewSkillName(e.target.value)}
-              placeholder="e.g., Machine Learning, Web Development, Data Science..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={adding}
-            />
-            <button
-              type="submit"
-              disabled={adding || !newSkillName.trim()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {adding ? 'Adding...' : 'Add Skill'}
-            </button>
-          </form>
+          <button
+            onClick={() => setShowBrowser(true)}
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-medium"
+          >
+            Browse All Available Skills
+          </button>
           {error && (
             <div className="mt-3 text-red-600 text-sm bg-red-50 p-3 rounded">
               {error}
@@ -136,6 +108,16 @@ export default function SkillsPage() {
           />
         </div>
       </div>
+
+      {/* Skill Browser Modal */}
+      <SkillBrowserModal
+        isOpen={showBrowser}
+        onClose={() => setShowBrowser(false)}
+        onSkillAdded={() => {
+          loadSkills();
+          setShowBrowser(false);
+        }}
+      />
     </div>
   );
 }

@@ -85,7 +85,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5190", "http://localhost:5191", "http://localhost:5192", "http://localhost:5193", "http://localhost:3000")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5190", "http://localhost:5192", "http://localhost:3000")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -93,7 +93,11 @@ builder.Services.AddCors(options =>
 });
 
 // Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();

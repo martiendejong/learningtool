@@ -7,12 +7,14 @@ public interface IKnowledgeService
     // Skill management
     Task<Skill> AddSkillToCatalogAsync(string name, string description, DifficultyLevel difficulty);
     Task<Skill?> FindOrCreateSkillAsync(string name);
+    Task<Skill?> GetSkillByIdAsync(int id);
     Task<List<Skill>> SearchSkillsAsync(string query);
     Task<List<Skill>> GetAllSkillsAsync();
 
     // Topic management
     Task<Topic> AddTopicAsync(int skillId, string name, string description);
     Task<Topic?> FindOrCreateTopicAsync(int skillId, string name);
+    Task<Topic?> GetTopicByIdAsync(int id);
     Task<List<Topic>> GetTopicsForSkillAsync(int skillId);
 
     // Course management

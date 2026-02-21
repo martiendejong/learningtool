@@ -19,6 +19,7 @@ public class UserSkillRepository : IUserSkillRepository
         var query = _context.UserSkills
             .Include(us => us.Skill)
                 .ThenInclude(s => s.Topics)
+                    .ThenInclude(t => t.Courses)
             .Where(us => us.UserId == userId);
 
         if (includeDeleted)

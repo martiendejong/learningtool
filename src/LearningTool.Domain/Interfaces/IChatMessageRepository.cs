@@ -10,4 +10,5 @@ public interface IChatMessageRepository
     Task<List<ChatMessage>> GetAllAsync();
     Task<ChatMessage> UpdateAsync(ChatMessage entity);
     Task DeleteAsync(int id);
+    Task DeleteByUserIdAsync(string userId);
 }

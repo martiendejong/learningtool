@@ -65,6 +65,11 @@ public class KnowledgeService : IKnowledgeService
         return await _skillRepository.GetAllAsync();
     }
 
+    public async Task<Skill?> GetSkillByIdAsync(int id)
+    {
+        return await _skillRepository.GetByIdAsync(id);
+    }
+
     public async Task<Topic> AddTopicAsync(int skillId, string name, string description)
     {
         var topic = new Topic
@@ -98,6 +103,11 @@ public class KnowledgeService : IKnowledgeService
     public async Task<List<Topic>> GetTopicsForSkillAsync(int skillId)
     {
         return await _topicRepository.GetBySkillIdAsync(skillId);
+    }
+
+    public async Task<Topic?> GetTopicByIdAsync(int id)
+    {
+        return await _topicRepository.GetByIdAsync(id);
     }
 
     public async Task<Course> AddCourseAsync(int topicId, string name, string description,

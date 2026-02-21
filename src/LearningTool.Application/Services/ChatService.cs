@@ -16,6 +16,7 @@ public interface IChatService
 {
     Task<ChatResponse> ProcessMessageAsync(string userId, string message);
     Task<List<DomainChatMessage>> GetChatHistoryAsync(string userId, int limit = 50);
+    Task ClearChatHistoryAsync(string userId);
 }
 
 public class ChatService : IChatService
@@ -44,7 +45,7 @@ public class ChatService : IChatService
         _model = configuration["OpenAI:Model"] ?? "gpt-4o-mini";
         _systemPrompt = configuration["OpenAI:SystemPrompt"] ?? "You are a helpful AI learning assistant.";
         _maxTokens = int.Parse(configuration["OpenAI:MaxTokens"] ?? "500");
-        _temperature = float.Parse(configuration["OpenAI:Temperature"] ?? "0.7");
+        _temperature = float.Parse(configuration["OpenAI:Temperature"] ?? "0.7", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public async Task<ChatResponse> ProcessMessageAsync(string userId, string message)
@@ -79,6 +80,11 @@ public class ChatService : IChatService
     public async Task<List<DomainChatMessage>> GetChatHistoryAsync(string userId, int limit = 50)
     {
         return await _chatMessageRepository.GetByUserIdAsync(userId, limit);
+    }
+
+    public async Task ClearChatHistoryAsync(string userId)
+    {
+        await _chatMessageRepository.DeleteByUserIdAsync(userId);
     }
 
     private async Task<ChatResponse> GenerateResponseAsync(string userId, string message)
@@ -191,6 +197,60 @@ public class ChatService : IChatService
                     "additionalProperties": false
                 }
                 """)
+            ),
+            ChatTool.CreateFunctionTool(
+                functionName: "add_topic",
+                functionDescription: "Add a new topic to an existing skill",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "skillName": {
+                            "type": "string",
+                            "description": "The name of the skill to add the topic to"
+                        },
+                        "topicName": {
+                            "type": "string",
+                            "description": "The name of the topic to add"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "A brief description of what this topic covers"
+                        }
+                    },
+                    "required": ["skillName", "topicName", "description"],
+                    "additionalProperties": false
+                }
+                """)
+            ),
+            ChatTool.CreateFunctionTool(
+                functionName: "add_course",
+                functionDescription: "Add a course recommendation to a specific topic",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "topicName": {
+                            "type": "string",
+                            "description": "The name of the topic to add the course to"
+                        },
+                        "courseName": {
+                            "type": "string",
+                            "description": "The name of the course"
+                        },
+                        "url": {
+                            "type": "string",
+                            "description": "The URL to the course"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "A brief description of the course content"
+                        }
+                    },
+                    "required": ["topicName", "courseName", "description"],
+                    "additionalProperties": false
+                }
+                """)
             )
         };
 
@@ -209,7 +269,7 @@ public class ChatService : IChatService
         // Call OpenAI API
         var completion = await chatClient.CompleteChatAsync(messages, options);
 
-        var responseMessage = completion.Value.Content[0].Text;
+        var responseMessage = string.Empty;
         var toolCalls = new List<DTOToolCall>();
 
         // Check if the model wants to call functions
@@ -256,7 +316,12 @@ public class ChatService : IChatService
 
             // Get final response from OpenAI
             var finalCompletion = await chatClient.CompleteChatAsync(finalMessages);
-            responseMessage = finalCompletion.Value.Content[0].Text;
+            responseMessage = finalCompletion.Value.Content.Count > 0 ? finalCompletion.Value.Content[0].Text : string.Empty;
+        }
+        else
+        {
+            // No tool calls, get text response directly
+            responseMessage = completion.Value.Content.Count > 0 ? completion.Value.Content[0].Text : string.Empty;
         }
 
         return new ChatResponse
@@ -339,6 +404,66 @@ public class ChatService : IChatService
                         return $"No topics found for {targetSkill} yet.";
                     }
                     return $"Skill '{targetSkill}' not found.";
+
+                case "add_topic":
+                    var skillNameForTopic = toolCall.Arguments["skillName"].ToString()!;
+                    var topicName = toolCall.Arguments["topicName"].ToString()!;
+                    var topicDescription = toolCall.Arguments["description"].ToString()!;
+
+                    var skillsForTopic = await _knowledgeService.GetAllSkillsAsync();
+                    var skillForTopic = skillsForTopic.FirstOrDefault(s =>
+                        s.Name.Equals(skillNameForTopic, StringComparison.OrdinalIgnoreCase));
+
+                    if (skillForTopic != null)
+                    {
+                        var topic = await _knowledgeService.AddTopicAsync(skillForTopic.Id, topicName, topicDescription);
+                        return $"Successfully added topic '{topicName}' to skill '{skillNameForTopic}'.";
+                    }
+                    return $"Skill '{skillNameForTopic}' not found. Please add the skill first.";
+
+                case "add_course":
+                    var topicNameForCourse = toolCall.Arguments["topicName"].ToString()!;
+                    var courseName = toolCall.Arguments["courseName"].ToString()!;
+                    var courseUrl = toolCall.Arguments.ContainsKey("url")
+                        ? toolCall.Arguments["url"].ToString()!
+                        : "";
+                    var courseDescription = toolCall.Arguments["description"].ToString()!;
+
+                    // Find the topic across all skills
+                    var allSkillsForCourse = await _knowledgeService.GetAllSkillsAsync();
+                    Domain.Entities.Topic? foundTopic = null;
+                    foreach (var skillItem in allSkillsForCourse)
+                    {
+                        var topicsForSkill = await _knowledgeService.GetTopicsForSkillAsync(skillItem.Id);
+                        foundTopic = topicsForSkill.FirstOrDefault(t =>
+                            t.Name.Equals(topicNameForCourse, StringComparison.OrdinalIgnoreCase));
+                        if (foundTopic != null) break;
+                    }
+
+                    if (foundTopic != null)
+                    {
+                        var resourceLinks = new List<ResourceLink>();
+                        if (!string.IsNullOrEmpty(courseUrl))
+                        {
+                            resourceLinks.Add(new ResourceLink
+                            {
+                                Title = courseName,
+                                Url = courseUrl,
+                                Type = ResourceType.Tutorial
+                            });
+                        }
+
+                        var course = await _knowledgeService.AddCourseAsync(
+                            foundTopic.Id,
+                            courseName,
+                            courseDescription,
+                            courseDescription, // Use description as content
+                            60, // default 60 minutes
+                            new List<string>(),
+                            resourceLinks);
+                        return $"Successfully added course '{courseName}' to topic '{topicNameForCourse}'.";
+                    }
+                    return $"Topic '{topicNameForCourse}' not found. Please add the topic first.";
 
                 default:
                     return "Unknown tool call.";

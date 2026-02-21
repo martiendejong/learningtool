@@ -10,31 +10,38 @@ export default function Layout() {
   };
 
   const navLinkClass = (path: string) => {
-    const base = "px-4 py-2 rounded-md transition-colors";
+    const base = "px-4 py-2 rounded-md transition-colors font-medium";
     return isActive(path)
-      ? `${base} bg-blue-600 text-white`
-      : `${base} text-gray-700 hover:bg-gray-100`;
+      ? `${base} bg-gradient-to-r from-green-600 to-green-500 text-white shadow-md`
+      : `${base} text-gray-700 hover:bg-green-50 hover:text-green-700`;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
       {/* Navigation Bar */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <nav className="bg-white shadow-lg border-b-4 border-green-500">
+        <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
-              <Link to="/" className="text-2xl font-bold text-blue-600">
-                LearningTool
+              <Link to="/" className="hover:opacity-80 transition-opacity">
+                <img
+                  src="https://prospergenics.com/wp-content/uploads/2026/02/logo_header.png"
+                  alt="Prospergenics Learning Platform"
+                  className="h-12"
+                />
               </Link>
               <div className="flex gap-2">
                 <Link to="/chat" className={navLinkClass('/chat')}>
-                  💬 Chat
+                  💬 Learn
                 </Link>
                 <Link to="/skills" className={navLinkClass('/skills')}>
-                  🎯 My Skills
+                  🎯 My Progress
                 </Link>
                 <Link to="/timeline" className={navLinkClass('/timeline')}>
-                  📅 Timeline
+                  📅 Journey
+                </Link>
+                <Link to="/about" className={navLinkClass('/about')}>
+                  ℹ️ About Us
                 </Link>
               </div>
             </div>

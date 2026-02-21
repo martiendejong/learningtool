@@ -32,6 +32,17 @@ public class SkillsController : ControllerBase
         return Ok(skills);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSkillById(int id)
+    {
+        var skill = await _knowledgeService.GetSkillByIdAsync(id);
+        if (skill == null)
+        {
+            return NotFound();
+        }
+        return Ok(skill);
+    }
+
     [HttpGet("my-skills")]
     public async Task<IActionResult> GetMySkills()
     {

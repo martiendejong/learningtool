@@ -1,0 +1,84 @@
+# Sensitive files - NEVER COMMIT
+CREDENTIALS.md
+**/appsettings.Production.json
+**/appsettings.Development.json
+**/appsettings.Secrets.json
+**/bin/**/appsettings.json
+**/bin/**/appsettings.*.json
+*.db
+*.db-shm
+*.db-wal
+
+# Build outputs
+publish/
+bin/
+obj/
+**/bin/
+**/obj/
+**/Release/
+**/Debug/
+dist/
+node_modules/
+
+# IDE
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.txt
+deployment-*.log
+*-deployment.log
+
+# Package files
+*.tar.gz
+*.zip
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# Temporary deployment scripts (keep the main ones)
+deploy-automated.ps1
+deploy-now.sh
+deploy-via-ftp.ps1
+test-ssh.py
+upload-and-deploy.py
+deploy-windows.ps1
+deploy.bat
+deploy.py
+chunked-deployment.log
+complete-deployment.log
+deployment-final.log
+deployment-output.txt
+final-deployment.log
+python-deployment.log
+windows-deployment.log
+
+# Keep these deployment scripts
+!deploy-complete.py
+!deploy-ssh-copy.py
+!configure-iis-simple.py
+!add-domain-binding.py
+!verify-deployment.py
+!create-admin-user.py
+!README-DEPLOYMENT.md
+!DEPLOYMENT-CHECKLIST.md
+!DEPLOYMENT_SUCCESS.md
+
+# Temporary status files
+DEPLOYMENT_ISSUE.md
+DEPLOYMENT_STATUS.md
+DEPLOYMENT_GUIDE.md
