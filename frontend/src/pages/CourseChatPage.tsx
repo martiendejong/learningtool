@@ -39,7 +39,7 @@ export default function CourseChatPage() {
       setInitialLoading(true);
 
       // Load course details
-      const courseResponse = await api.get<Course>(`/knowledge/courses/${id}`);
+      const courseResponse = await api.get<Course>(`/courses/${id}`);
       setCourse(courseResponse.data);
 
       // Load course chat history
