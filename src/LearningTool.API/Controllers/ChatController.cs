@@ -109,6 +109,60 @@ public class ChatController : ControllerBase
         return Ok(new { message = "Chat history cleared" });
     }
 
+    /// <summary>
+    /// Send a message in course-specific teaching mode
+    /// </summary>
+    [HttpPost("course/{courseId}/message")]
+    public async Task<ActionResult<ChatResponse>> SendCourseMessage(int courseId, [FromBody] ChatRequest request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+
+        var response = await _chatService.ProcessCourseMessageAsync(userId, courseId, request.Message);
+
+        // If tools were called, execute them
+        if (response.ToolCalls != null && response.ToolCalls.Any())
+        {
+            var results = await ExecuteCourseToolCallsAsync(userId, courseId, response.ToolCalls);
+
+            return Ok(new
+            {
+                response.Message,
+                response.ToolCalls,
+                response.RequiresAction,
+                ToolResults = results
+            });
+        }
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get course-specific chat history
+    /// </summary>
+    [HttpGet("course/{courseId}/history")]
+    public async Task<IActionResult> GetCourseHistory(int courseId, [FromQuery] int limit = 50)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+
+        var history = await _chatService.GetCourseChatHistoryAsync(userId, courseId, limit);
+        return Ok(history);
+    }
+
+    /// <summary>
+    /// Clear course-specific chat history
+    /// </summary>
+    [HttpDelete("course/{courseId}/history")]
+    public async Task<IActionResult> ClearCourseHistory(int courseId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+
+        await _chatService.ClearCourseChatHistoryAsync(userId, courseId);
+        return Ok(new { message = "Course chat history cleared" });
+    }
+
     private async Task<List<ToolResult>> ExecuteToolCallsAsync(string userId, List<ToolCall> toolCalls)
     {
         var results = new List<ToolResult>();
@@ -186,6 +240,106 @@ public class ChatController : ControllerBase
                             Success = true,
                             Result = $"Retrieved {skills.Count} skills",
                             Data = skills
+                        };
+                    }
+
+                default:
+                    return new ToolResult
+                    {
+                        ToolCallId = toolCall.Id,
+                        Success = false,
+                        Result = $"Unknown tool: {toolCall.ToolName}"
+                    };
+            }
+        }
+        catch (Exception ex)
+        {
+            return new ToolResult
+            {
+                ToolCallId = toolCall.Id,
+                Success = false,
+                Result = $"Error executing tool: {ex.Message}"
+            };
+        }
+    }
+
+    private async Task<List<ToolResult>> ExecuteCourseToolCallsAsync(string userId, int courseId, List<ToolCall> toolCalls)
+    {
+        var results = new List<ToolResult>();
+
+        foreach (var toolCall in toolCalls)
+        {
+            var result = await ExecuteCourseToolAsync(userId, courseId, toolCall);
+            results.Add(result);
+        }
+
+        return results;
+    }
+
+    private async Task<ToolResult> ExecuteCourseToolAsync(string userId, int courseId, ToolCall toolCall)
+    {
+        try
+        {
+            switch (toolCall.ToolName)
+            {
+                case "get_course_content":
+                    {
+                        var course = await _knowledgeService.GetCourseByIdAsync(courseId);
+                        if (course == null)
+                        {
+                            return new ToolResult
+                            {
+                                ToolCallId = toolCall.Id,
+                                Success = false,
+                                Result = "Course not found"
+                            };
+                        }
+
+                        return new ToolResult
+                        {
+                            ToolCallId = toolCall.Id,
+                            Success = true,
+                            Result = $"Course: {course.Name}\nContent: {course.Content}",
+                            Data = course
+                        };
+                    }
+
+                case "mark_section_complete":
+                    {
+                        var sectionName = toolCall.Arguments["sectionName"].ToString();
+                        return new ToolResult
+                        {
+                            ToolCallId = toolCall.Id,
+                            Success = true,
+                            Result = $"Section '{sectionName}' marked as complete"
+                        };
+                    }
+
+                case "get_student_progress":
+                    {
+                        var userCourse = await _userLearningService.GetUserCourseAsync(userId, courseId);
+                        if (userCourse == null)
+                        {
+                            return new ToolResult
+                            {
+                                ToolCallId = toolCall.Id,
+                                Success = true,
+                                Result = "Not started yet",
+                                Data = new { progressPercentage = 0, startedAt = (DateTime?)null }
+                            };
+                        }
+
+                        var course = await _knowledgeService.GetCourseByIdAsync(courseId);
+                        var progressPercentage = course != null && course.EstimatedMinutes > 0
+                            ? Math.Min(100, (int)((userCourse.MinutesSpent / (float)course.EstimatedMinutes) * 100))
+                            : 0;
+
+                        return new ToolResult
+                        {
+                            ToolCallId = toolCall.Id,
+                            Success = true,
+                            Result = $"Progress: {progressPercentage}%",
+                            Data = new { progressPercentage, minutesSpent = userCourse.MinutesSpent, status = userCourse.Status }
                         };
                     }
 
