@@ -54,7 +54,6 @@ export default function MessageContent({ content, role }: MessageContentProps) {
                           text.toLowerCase().includes('beginner') || text.toLowerCase().includes('tutorial');
 
       if (isCourseName) {
-        const cleanName = text.replace(/"/g, '');
         return (
           <strong
             {...props}

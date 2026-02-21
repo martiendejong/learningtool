@@ -9,6 +9,7 @@ import TopicDetailPage from './pages/TopicDetailPage';
 import TimelinePage from './pages/TimelinePage';
 import CoursePage from './pages/CoursePage';
 import CourseDetailPage from './pages/CourseDetailPage';
+import CourseChatPage from './pages/CourseChatPage';
 import AboutPage from './pages/AboutPage';
 import Layout from './components/Layout';
 
@@ -32,6 +33,7 @@ function App() {
           <Route path="timeline" element={<TimelinePage />} />
           <Route path="course/:courseId" element={<CoursePage />} />
           <Route path="course-detail/:id" element={<CourseDetailPage />} />
+          <Route path="course/:id/learn" element={<CourseChatPage />} />
           <Route path="about" element={<AboutPage />} />
         </Route>
       </Routes>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { knowledgeService } from '../services/knowledgeService';
-import type { Skill, Topic, Course } from '../services/knowledgeService';
+import type { Skill, Topic } from '../services/knowledgeService';
 
 export default function SkillDetailPage() {
   const { id } = useParams<{ id: string }>();
