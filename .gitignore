@@ -1,5 +1,6 @@
 # Sensitive files - NEVER COMMIT
 CREDENTIALS.md
+appsettings.json
 **/appsettings.Production.json
 **/appsettings.Development.json
 **/appsettings.Secrets.json
@@ -8,6 +9,7 @@ CREDENTIALS.md
 *.db
 *.db-shm
 *.db-wal
+!appsettings.example.json
 
 # Build outputs
 publish/
