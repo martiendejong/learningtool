@@ -165,7 +165,20 @@ export default function CourseChatPage() {
         >
           ← Back to Course Overview
         </button>
-        <h1 className="text-2xl font-bold">{course.name}</h1>
+        {course.topic && (
+          <div className="text-green-100 text-sm mb-2 flex items-center gap-2">
+            {course.topic.skill && (
+              <>
+                <span className="font-medium">{course.topic.skill.name}</span>
+                <span>→</span>
+              </>
+            )}
+            <span className="font-medium">{course.topic.name}</span>
+            <span>→</span>
+            <span className="text-white font-semibold">{course.name}</span>
+          </div>
+        )}
+        {!course.topic && <h1 className="text-2xl font-bold">{course.name}</h1>}
         <p className="text-green-100 text-sm mt-1">Interactive Learning Session</p>
       </div>
 

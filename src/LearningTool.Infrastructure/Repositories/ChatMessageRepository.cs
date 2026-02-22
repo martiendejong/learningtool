@@ -17,7 +17,7 @@ public class ChatMessageRepository : IChatMessageRepository
     public async Task<List<ChatMessage>> GetByUserIdAsync(string userId, int limit = 50)
     {
         return await _context.ChatMessages
-            .Where(m => m.UserId == userId)
+            .Where(m => m.UserId == userId && m.CourseId == null)
             .OrderByDescending(m => m.Timestamp)
             .Take(limit)
             .OrderBy(m => m.Timestamp)
@@ -61,7 +61,7 @@ public class ChatMessageRepository : IChatMessageRepository
     public async Task DeleteByUserIdAsync(string userId)
     {
         var messages = await _context.ChatMessages
-            .Where(m => m.UserId == userId)
+            .Where(m => m.UserId == userId && m.CourseId == null)
             .ToListAsync();
 
         if (messages.Any())

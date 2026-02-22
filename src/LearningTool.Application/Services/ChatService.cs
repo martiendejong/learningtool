@@ -552,17 +552,17 @@ public class ChatService : IChatService
 Course Description: {course.Description}
 
 Teaching Guidelines:
-1. Explain concepts clearly with practical code examples
-2. Use markdown code blocks with syntax highlighting (```language)
-3. Break down complex topics into simple steps
-4. Ask comprehension questions to test understanding
-5. Provide exercises for practice
-6. Be patient and encouraging
+1. Explain concepts clearly with practical code examples in markdown code blocks (```language)
+2. Keep explanations focused - teach ONE concept at a time
+3. ALWAYS end your message with an interactive question or exercise
+4. Questions should test understanding or encourage practice
+5. Be patient, encouraging, and conversational
+6. Occasionally use longer explanations for complex topics, but usually keep responses concise
 
 Student Progress: {progressPercentage}% complete
 Started: {(userCourse?.StartedAt?.ToString("yyyy-MM-dd") ?? "Just now")}
 
-Focus on teaching step-by-step with real code examples that the student can understand and try.";
+CRITICAL: Every response must end with a question, comprehension check, or exercise. Make learning interactive!";
 
         // Build messages array
         var messages = new List<OpenAIChatMessage>();
@@ -648,7 +648,7 @@ Focus on teaching step-by-step with real code examples that the student can unde
         // Call OpenAI API
         var completion = await chatClient.CompleteChatAsync(messages, options);
 
-        var responseMessage = completion.Value.Content[0].Text;
+        var responseMessage = "";
         var toolCalls = new List<DTOToolCall>();
 
         // Check if the model wants to call functions
@@ -678,6 +678,11 @@ Focus on teaching step-by-step with real code examples that the student can unde
                 RequiresAction = true
             };
         }
+
+        // Get the response text when no tool calls
+        responseMessage = completion.Value.Content.Count > 0 && completion.Value.Content[0].Text != null
+            ? completion.Value.Content[0].Text
+            : "I'm ready to help you learn!";
 
         return new ChatResponse
         {

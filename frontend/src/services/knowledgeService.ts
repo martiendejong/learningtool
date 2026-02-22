@@ -16,6 +16,7 @@ export interface Topic {
   description: string;
   createdAt: string;
   courses?: Course[];
+  skill?: Skill;  // Navigation property
 }
 
 export interface Course {
@@ -28,6 +29,7 @@ export interface Course {
   resourceLinks: ResourceLink[];
   estimatedMinutes: number;
   createdAt: string;
+  topic?: Topic;  // Navigation property
 }
 
 export interface ResourceLink {

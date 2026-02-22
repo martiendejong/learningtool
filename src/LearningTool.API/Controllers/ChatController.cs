@@ -1,5 +1,6 @@
 using LearningTool.Application.DTOs;
 using LearningTool.Application.Services;
+using LearningTool.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -193,8 +194,8 @@ public class ChatController : ControllerBase
                         {
                             ToolCallId = toolCall.Id,
                             Success = true,
-                            Result = $"Added skill: {name}",
-                            Data = userSkill
+                            Result = $"Added skill '{name}' with ID {skill.Id}. Use this ID: {skill.Id}",
+                            Data = new { skillId = skill.Id, skill = skill, userSkill = userSkill }
                         };
                     }
 
@@ -225,8 +226,35 @@ public class ChatController : ControllerBase
                         {
                             ToolCallId = toolCall.Id,
                             Success = true,
-                            Result = $"Added topic: {name}",
-                            Data = topic
+                            Result = $"Added topic '{name}' with ID {topic!.Id}. Use this ID: {topic.Id}",
+                            Data = new { topicId = topic.Id, topic = topic }
+                        };
+                    }
+
+                case "add_course":
+                    {
+                        var topicId = Convert.ToInt32(toolCall.Arguments["topicId"]);
+                        var name = toolCall.Arguments["name"].ToString()!;
+                        var description = toolCall.Arguments.ContainsKey("description")
+                            ? toolCall.Arguments["description"].ToString() ?? ""
+                            : "";
+                        var content = toolCall.Arguments.ContainsKey("content")
+                            ? toolCall.Arguments["content"].ToString() ?? ""
+                            : "";
+                        var estimatedMinutes = toolCall.Arguments.ContainsKey("estimatedMinutes")
+                            ? Convert.ToInt32(toolCall.Arguments["estimatedMinutes"])
+                            : 60;
+                        var prerequisites = new List<string>();
+                        var resourceLinks = new List<ResourceLink>();
+
+                        var course = await _knowledgeService.AddCourseAsync(topicId, name, description, content, estimatedMinutes, prerequisites, resourceLinks);
+
+                        return new ToolResult
+                        {
+                            ToolCallId = toolCall.Id,
+                            Success = true,
+                            Result = $"Added course '{name}' with ID {course!.Id}. Use this ID: {course.Id}",
+                            Data = new { courseId = course.Id, course = course }
                         };
                     }
 
