@@ -46,20 +46,8 @@ export default function CoursePage() {
       setUserCourse(userCourseData);
       setError('');
 
-      // Import chatService dynamically to avoid circular dependencies
-      const { chatService } = await import('../services/chatService');
-
-      // Clear chat history
-      await chatService.clearHistory();
-
-      // Navigate to chat with course info
-      navigate('/chat', {
-        state: {
-          startCourse: true,
-          courseId: parseInt(courseId),
-          courseName: course.name
-        }
-      });
+      // Navigate to course-specific chat
+      navigate(`/course/${courseId}/learn`);
     } catch (err) {
       console.error('Failed to start course:', err);
       setError('Failed to start course');

@@ -22,4 +22,5 @@ public interface IKnowledgeService
         int estimatedMinutes, List<string> prerequisites, List<ResourceLink> resourceLinks);
     Task<Course?> GetCourseByIdAsync(int id);
     Task<List<Course>> GetCoursesForTopicAsync(int topicId);
+    Task UpdateCourseContentAsync(int courseId, string learningPlan, string systemPrompt, List<ResourceLink> resources);
 }

@@ -136,4 +136,17 @@ public class KnowledgeService : IKnowledgeService
     {
         return await _courseRepository.GetByTopicIdAsync(topicId);
     }
+
+    public async Task UpdateCourseContentAsync(int courseId, string learningPlan, string systemPrompt, List<ResourceLink> resources)
+    {
+        var course = await _courseRepository.GetByIdAsync(courseId);
+        if (course == null) return;
+
+        course.LearningPlan = learningPlan;
+        course.SystemPrompt = systemPrompt;
+        course.ResourceLinks = resources;
+        course.ContentGeneratedAt = DateTime.UtcNow;
+
+        await _courseRepository.UpdateAsync(course);
+    }
 }

@@ -157,7 +157,7 @@ if (app.Environment.IsDevelopment())
     // }
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Temporarily disabled for production - SSL certificate needs configuration
 
 app.UseCors();
 

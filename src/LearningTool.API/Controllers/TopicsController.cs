@@ -6,7 +6,7 @@ using System.Security.Claims;
 namespace LearningTool.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 [Authorize]
 public class TopicsController : ControllerBase
 {

@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace LearningTool.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 [Authorize]
 public class ChatController : ControllerBase
 {
@@ -87,12 +87,22 @@ public class ChatController : ControllerBase
         // Start course for user
         await _userLearningService.StartCourseAsync(userId, request.CourseId);
 
-        // Clear chat history for clean start
-        await _chatService.ClearChatHistoryAsync(userId);
+        // Generate AI course content if not already generated
+        if (course.ContentGeneratedAt == null)
+        {
+            var (learningPlan, systemPrompt, resources) = await _chatService.GenerateCourseContentAsync(course);
+            await _knowledgeService.UpdateCourseContentAsync(course.Id, learningPlan, systemPrompt, resources);
 
-        // Create initial chat message
+            // Reload course with updated content
+            course = await _knowledgeService.GetCourseByIdAsync(request.CourseId);
+        }
+
+        // Clear COURSE chat history for clean start (not general chat!)
+        await _chatService.ClearCourseChatHistoryAsync(userId, request.CourseId);
+
+        // Create initial COURSE chat message
         var message = $"I want to start the course '{course.Name}'. Please teach me step by step.";
-        var response = await _chatService.ProcessMessageAsync(userId, message);
+        var response = await _chatService.ProcessCourseMessageAsync(userId, request.CourseId, message);
 
         return Ok(response);
     }

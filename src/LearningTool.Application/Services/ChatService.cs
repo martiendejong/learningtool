@@ -9,6 +9,10 @@ using Microsoft.Extensions.Configuration;
 using DTOToolCall = LearningTool.Application.DTOs.ToolCall;
 using OpenAIChatMessage = OpenAI.Chat.ChatMessage;
 using DomainChatMessage = LearningTool.Domain.Entities.ChatMessage;
+using CreatedSkill = LearningTool.Application.DTOs.CreatedSkill;
+using CreatedTopic = LearningTool.Application.DTOs.CreatedTopic;
+using CreatedCourse = LearningTool.Application.DTOs.CreatedCourse;
+using LearningPathUpdate = LearningTool.Application.DTOs.LearningPathUpdate;
 
 namespace LearningTool.Application.Services;
 
@@ -22,6 +26,7 @@ public interface IChatService
     Task<ChatResponse> ProcessCourseMessageAsync(string userId, int courseId, string message);
     Task<List<DomainChatMessage>> GetCourseChatHistoryAsync(string userId, int courseId, int limit = 50);
     Task ClearCourseChatHistoryAsync(string userId, int courseId);
+    Task<(string learningPlan, string systemPrompt, List<ResourceLink> resources)> GenerateCourseContentAsync(Course course);
 }
 
 public class ChatService : IChatService
@@ -48,7 +53,34 @@ public class ChatService : IChatService
         // Read OpenAI configuration
         _apiKey = configuration["OpenAI:ApiKey"] ?? throw new InvalidOperationException("OpenAI API Key not configured");
         _model = configuration["OpenAI:Model"] ?? "gpt-4o-mini";
-        _systemPrompt = configuration["OpenAI:SystemPrompt"] ?? "You are a helpful AI learning assistant.";
+        _systemPrompt = configuration["OpenAI:SystemPrompt"] ?? @"You are an intelligent AI learning assistant that helps users build personalized learning paths.
+
+CRITICAL: Your ONLY job in this chat is to create learning paths (Skills → Topics → Courses). You do NOT teach courses here.
+
+When a user expresses interest in learning something, you MUST follow this sequence:
+1. Call add_skill to create the skill
+2. Call add_topic 2-3 times to create topics for that skill
+3. Call add_course AT LEAST ONCE for EACH topic you created (this is MANDATORY!)
+4. Present the created courses to the user
+5. Tell them to click the 'Start Course' button to begin learning
+
+Example workflow for 'I want to learn React':
+- add_skill(name='React', description='JavaScript library for building user interfaces')
+- add_topic(skillName='React', topicName='React Basics', description='Core concepts and components')
+- add_course(topicName='React Basics', courseName='Introduction to React', description='Learn React fundamentals including JSX, components, and props')
+- add_topic(skillName='React', topicName='React Hooks', description='Modern React with hooks')
+- add_course(topicName='React Hooks', courseName='Mastering React Hooks', description='Deep dive into useState, useEffect, and custom hooks')
+
+Then say: 'I've created these courses for you! To start learning, navigate to the Skills page and click the Start Course button on the course you want to begin.'
+
+IMPORTANT:
+- DO NOT teach course content in this chat
+- DO NOT start courses for the user
+- DO NOT try to be a teacher here
+- Your role is ONLY to build the learning path structure
+- Users will access actual course teaching in a separate dedicated course chat
+
+If user says 'start' or 'begin', remind them: 'Please use the Start Course button on the course page to begin your learning journey. Each course has its own dedicated learning environment.'";
         _maxTokens = int.Parse(configuration["OpenAI:MaxTokens"] ?? "500");
         _temperature = float.Parse(configuration["OpenAI:Temperature"] ?? "0.7", System.Globalization.CultureInfo.InvariantCulture);
     }
@@ -230,26 +262,26 @@ public class ChatService : IChatService
             ),
             ChatTool.CreateFunctionTool(
                 functionName: "add_course",
-                functionDescription: "Add a course recommendation to a specific topic",
+                functionDescription: "Create a new course under a topic. You MUST call this at least once for each topic you create. Courses are what users actually learn from.",
                 functionParameters: BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
                         "topicName": {
                             "type": "string",
-                            "description": "The name of the topic to add the course to"
+                            "description": "The exact name of the topic this course belongs to (must match a topic you already created)"
                         },
                         "courseName": {
                             "type": "string",
-                            "description": "The name of the course"
-                        },
-                        "url": {
-                            "type": "string",
-                            "description": "The URL to the course"
+                            "description": "A clear, descriptive name for the course (e.g., 'Introduction to React', 'Python Data Structures')"
                         },
                         "description": {
                             "type": "string",
-                            "description": "A brief description of the course content"
+                            "description": "A detailed description of what the student will learn in this course (2-3 sentences)"
+                        },
+                        "url": {
+                            "type": "string",
+                            "description": "Optional URL to external course materials"
                         }
                     },
                     "required": ["topicName", "courseName", "description"],
@@ -276,6 +308,7 @@ public class ChatService : IChatService
 
         var responseMessage = string.Empty;
         var toolCalls = new List<DTOToolCall>();
+        var learningPathUpdate = new LearningPathUpdate();
 
         // Check if the model wants to call functions
         if (completion.Value.FinishReason == ChatFinishReason.ToolCalls)
@@ -298,12 +331,23 @@ public class ChatService : IChatService
                 }
             }
 
-            // Execute tool calls and get results
+            // Execute tool calls and collect learning path updates
             var toolResults = new List<string>();
             foreach (var toolCall in toolCalls)
             {
-                var result = await ExecuteToolCallAsync(userId, toolCall);
+                var (result, pathUpdate) = await ExecuteToolCallWithTrackingAsync(userId, toolCall);
                 toolResults.Add(result);
+
+                // Collect created items
+                if (pathUpdate != null)
+                {
+                    if (pathUpdate.CreatedSkill != null)
+                        learningPathUpdate.CreatedSkills.Add(pathUpdate.CreatedSkill);
+                    if (pathUpdate.CreatedTopic != null)
+                        learningPathUpdate.CreatedTopics.Add(pathUpdate.CreatedTopic);
+                    if (pathUpdate.CreatedCourse != null)
+                        learningPathUpdate.CreatedCourses.Add(pathUpdate.CreatedCourse);
+                }
             }
 
             // Generate final response with tool results
@@ -332,12 +376,22 @@ public class ChatService : IChatService
         return new ChatResponse
         {
             Message = responseMessage,
-            RequiresAction = toolCalls.Any(),
-            ToolCalls = toolCalls.Any() ? toolCalls : null
+            RequiresAction = false, // Tools already executed
+            ToolCalls = null, // Don't return tool calls since they're already executed
+            LearningPathUpdate = learningPathUpdate.CreatedSkills.Any() || learningPathUpdate.CreatedTopics.Any() || learningPathUpdate.CreatedCourses.Any()
+                ? learningPathUpdate
+                : null
         };
     }
 
-    private async Task<string> ExecuteToolCallAsync(string userId, DTOToolCall toolCall)
+    private class ToolExecutionResult
+    {
+        public CreatedSkill? CreatedSkill { get; set; }
+        public CreatedTopic? CreatedTopic { get; set; }
+        public CreatedCourse? CreatedCourse { get; set; }
+    }
+
+    private async Task<(string result, ToolExecutionResult? pathUpdate)> ExecuteToolCallWithTrackingAsync(string userId, DTOToolCall toolCall)
     {
         try
         {
@@ -371,7 +425,11 @@ public class ChatService : IChatService
                     // Add to user's learning path
                     await _userLearningService.AddSkillToUserAsync(userId, skill.Id);
 
-                    return $"Successfully added '{name}' to your learning path.";
+                    return ($"Successfully added '{name}' to your learning path. Skill ID: {skill.Id}",
+                        new ToolExecutionResult
+                        {
+                            CreatedSkill = new CreatedSkill { Id = skill.Id, Name = skill.Name }
+                        });
 
                 case "remove_skill":
                     var skillName = toolCall.Arguments["name"].ToString()!;
@@ -382,15 +440,15 @@ public class ChatService : IChatService
                     if (userSkill != null)
                     {
                         await _userLearningService.RemoveSkillFromUserAsync(userId, userSkill.SkillId);
-                        return $"Successfully removed '{skillName}' from your learning path.";
+                        return ($"Successfully removed '{skillName}' from your learning path.", null);
                     }
-                    return $"Skill '{skillName}' not found in your learning path.";
+                    return ($"Skill '{skillName}' not found in your learning path.", null);
 
                 case "get_user_progress":
                     var skills = await _userLearningService.GetUserSkillsAsync(userId);
                     var completedCourses = await _userLearningService.GetCompletedCoursesAsync(userId);
 
-                    return $"You are currently learning {skills.Count} skill(s) and have completed {completedCourses.Count} course(s).";
+                    return ($"You are currently learning {skills.Count} skill(s) and have completed {completedCourses.Count} course(s).", null);
 
                 case "list_available_topics":
                     var targetSkill = toolCall.Arguments["skillName"].ToString()!;
@@ -404,11 +462,11 @@ public class ChatService : IChatService
                         if (topics.Any())
                         {
                             var topicList = string.Join(", ", topics.Select(t => t.Name));
-                            return $"Topics for {targetSkill}: {topicList}";
+                            return ($"Topics for {targetSkill}: {topicList}", null);
                         }
-                        return $"No topics found for {targetSkill} yet.";
+                        return ($"No topics found for {targetSkill} yet.", null);
                     }
-                    return $"Skill '{targetSkill}' not found.";
+                    return ($"Skill '{targetSkill}' not found.", null);
 
                 case "add_topic":
                     var skillNameForTopic = toolCall.Arguments["skillName"].ToString()!;
@@ -422,9 +480,18 @@ public class ChatService : IChatService
                     if (skillForTopic != null)
                     {
                         var topic = await _knowledgeService.AddTopicAsync(skillForTopic.Id, topicName, topicDescription);
-                        return $"Successfully added topic '{topicName}' to skill '{skillNameForTopic}'.";
+                        return ($"Successfully added topic '{topicName}' to skill '{skillNameForTopic}'. Topic ID: {topic.Id}",
+                            new ToolExecutionResult
+                            {
+                                CreatedTopic = new CreatedTopic
+                                {
+                                    Id = topic.Id,
+                                    Name = topic.Name,
+                                    SkillId = skillForTopic.Id
+                                }
+                            });
                     }
-                    return $"Skill '{skillNameForTopic}' not found. Please add the skill first.";
+                    return ($"Skill '{skillNameForTopic}' not found. Please add the skill first.", null);
 
                 case "add_course":
                     var topicNameForCourse = toolCall.Arguments["topicName"].ToString()!;
@@ -466,17 +533,28 @@ public class ChatService : IChatService
                             60, // default 60 minutes
                             new List<string>(),
                             resourceLinks);
-                        return $"Successfully added course '{courseName}' to topic '{topicNameForCourse}'.";
+                        return ($"Successfully added course '{courseName}' to topic '{topicNameForCourse}'. Course ID: {course.Id}",
+                            new ToolExecutionResult
+                            {
+                                CreatedCourse = new CreatedCourse
+                                {
+                                    Id = course.Id,
+                                    Name = course.Name,
+                                    Description = course.Description,
+                                    TopicId = foundTopic.Id,
+                                    TopicName = foundTopic.Name
+                                }
+                            });
                     }
-                    return $"Topic '{topicNameForCourse}' not found. Please add the topic first.";
+                    return ($"Topic '{topicNameForCourse}' not found. Please add the topic first.", null);
 
                 default:
-                    return "Unknown tool call.";
+                    return ("Unknown tool call.", null);
             }
         }
         catch (Exception ex)
         {
-            return $"Error executing {toolCall.ToolName}: {ex.Message}";
+            return ($"Error executing {toolCall.ToolName}: {ex.Message}", null);
         }
     }
 
@@ -546,10 +624,39 @@ public class ChatService : IChatService
             ? Math.Min(100, (int)((userCourse.MinutesSpent / (float)course.EstimatedMinutes) * 100))
             : 0;
 
-        // Build teaching system prompt
-        var teachingPrompt = $@"You are an expert programming teacher teaching the course ""{course.Name}"".
+        // Build comprehensive teaching context with AI-generated content
+        var learningPlanSection = !string.IsNullOrEmpty(course.LearningPlan)
+            ? $@"
+
+LEARNING PLAN:
+{course.LearningPlan}"
+            : "";
+
+        var resourcesSection = course.ResourceLinks != null && course.ResourceLinks.Any()
+            ? $@"
+
+EXTERNAL RESOURCES AVAILABLE:
+{string.Join("\n", course.ResourceLinks.Select(r => $"- {r.Title} ({r.Type}): {r.Url}"))}"
+            : "";
+
+        // Build teaching system prompt - use AI-generated course-specific prompt if available
+        var teachingPrompt = !string.IsNullOrEmpty(course.SystemPrompt)
+            ? $@"{course.SystemPrompt}
+
+Course: ""{course.Name}""
+Description: {course.Description}
+{learningPlanSection}
+{resourcesSection}
+
+Student Progress: {progressPercentage}% complete
+Started: {(userCourse?.StartedAt?.ToString("yyyy-MM-dd") ?? "Just now")}
+
+You can reference the learning plan and external resources when teaching. Direct students to specific resources when relevant."
+            : $@"You are an expert programming teacher teaching the course ""{course.Name}"".
 
 Course Description: {course.Description}
+{learningPlanSection}
+{resourcesSection}
 
 Teaching Guidelines:
 1. Explain concepts clearly with practical code examples in markdown code blocks (```language)
@@ -630,6 +737,28 @@ CRITICAL: Every response must end with a question, comprehension check, or exerc
                     "additionalProperties": false
                 }
                 """)
+            ),
+            ChatTool.CreateFunctionTool(
+                functionName: "get_learning_plan",
+                functionDescription: "Get the detailed learning plan and curriculum for this course",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": false
+                }
+                """)
+            ),
+            ChatTool.CreateFunctionTool(
+                functionName: "get_external_resources",
+                functionDescription: "Get external learning resources (videos, tutorials, documentation) for this course",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": false
+                }
+                """)
             )
         };
 
@@ -689,5 +818,96 @@ CRITICAL: Every response must end with a question, comprehension check, or exerc
             Message = responseMessage,
             RequiresAction = false
         };
+    }
+
+    /// <summary>
+    /// Generate comprehensive course content when a course is first started
+    /// </summary>
+    public async Task<(string learningPlan, string systemPrompt, List<ResourceLink> resources)> GenerateCourseContentAsync(Course course)
+    {
+        var client = new OpenAIClient(new ApiKeyCredential(_apiKey));
+        var chatClient = client.GetChatClient("gpt-4o-mini");
+
+        var prompt = $@"You are an expert curriculum designer. Create comprehensive learning content for the course: '{course.Name}'.
+
+Course Description: {course.Description}
+
+Generate the following:
+
+1. LEARNING PLAN: A detailed, structured curriculum with:
+   - 3-5 main modules/sections
+   - Each module should have 2-4 specific lessons
+   - Clear learning objectives for each lesson
+   - Estimated time for each section
+   - Format as markdown with clear hierarchy
+
+2. EXTERNAL RESOURCES: Provide 5-10 high-quality external learning resources:
+   - YouTube videos (actual URLs)
+   - Documentation links
+   - Tutorials
+   - Articles
+   - Books
+   - Format as JSON array with title, url, and type
+
+3. TEACHING SYSTEM PROMPT: Create a detailed system prompt (300-500 words) for an AI teacher that will teach this course. Include:
+   - Teaching style and approach
+   - How to explain concepts
+   - How to use examples relevant to this topic
+   - How to check understanding
+   - How to encourage practice
+   - Specific pedagogical strategies for this subject
+
+Return your response in this EXACT JSON format:
+{{
+  ""learningPlan"": ""markdown string here"",
+  ""systemPrompt"": ""teaching instructions here"",
+  ""resources"": [
+    {{""title"": ""Resource Name"", ""url"": ""https://..."", ""type"": ""YouTube""}},
+    {{""title"": ""Resource Name"", ""url"": ""https://..."", ""type"": ""Documentation""}}
+  ]
+}}
+
+IMPORTANT: Return ONLY valid JSON, no markdown code blocks or extra text.";
+
+        var messages = new List<OpenAIChatMessage>
+        {
+            OpenAIChatMessage.CreateSystemMessage("You are an expert curriculum designer. Always respond with valid JSON only."),
+            OpenAIChatMessage.CreateUserMessage(prompt)
+        };
+
+        var options = new ChatCompletionOptions
+        {
+            MaxOutputTokenCount = 2000,
+            Temperature = 0.7f
+        };
+
+        var completion = await chatClient.CompleteChatAsync(messages, options);
+        var jsonResponse = completion.Value.Content[0].Text ?? "{}";
+
+        // Parse the JSON response
+        var doc = JsonDocument.Parse(jsonResponse);
+        var root = doc.RootElement;
+
+        var learningPlan = root.GetProperty("learningPlan").GetString() ?? "";
+        var systemPrompt = root.GetProperty("systemPrompt").GetString() ?? "";
+
+        var resources = new List<ResourceLink>();
+        if (root.TryGetProperty("resources", out var resourcesArray))
+        {
+            foreach (var resource in resourcesArray.EnumerateArray())
+            {
+                var typeString = resource.GetProperty("type").GetString() ?? "Tutorial";
+                var resourceType = Enum.TryParse<ResourceType>(typeString, out var parsed) ? parsed : ResourceType.Tutorial;
+
+                resources.Add(new ResourceLink
+                {
+                    Title = resource.GetProperty("title").GetString() ?? "",
+                    Url = resource.GetProperty("url").GetString() ?? "",
+                    Type = resourceType
+                });
+            }
+        }
+
+        return (learningPlan, systemPrompt, resources);
     }
 }
