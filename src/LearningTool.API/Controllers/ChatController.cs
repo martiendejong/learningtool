@@ -93,52 +93,51 @@ When users want to learn something, guide them through skills, topics, and cours
         // Add current message
         messages.Add(ChatMessage.CreateUserMessage(request.Message));
 
-        // Define tools for AI to use
-        var tools = new List<ChatTool>
-        {
-            ChatTool.CreateFunctionTool(
-                functionName: "add_skill",
-                functionDescription: "Add a skill to the user's learning path",
-                functionParameters: BinaryData.FromString("""
-                {
-                    "type": "object",
-                    "properties": {
-                        "skillId": {
-                            "type": "string",
-                            "description": "The ID of the skill to add"
-                        },
-                        "skillName": {
-                            "type": "string",
-                            "description": "The name of the skill (for context)"
-                        }
-                    },
-                    "required": ["skillId"]
-                }
-                """)),
-            ChatTool.CreateFunctionTool(
-                functionName: "search_skills",
-                functionDescription: "Search for available skills by name or description",
-                functionParameters: BinaryData.FromString("""
-                {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Search query to find skills"
-                        }
-                    },
-                    "required": ["query"]
-                }
-                """))
-        };
-
         // Call OpenAI with tools
-        var completion = await chatClient.CompleteChatAsync(messages, new ChatCompletionOptions
+        var options = new ChatCompletionOptions
         {
             MaxOutputTokenCount = 800,
-            Temperature = 0.7f,
-            Tools = tools
-        });
+            Temperature = 0.7f
+        };
+
+        // Add tools to the options (Tools is a collection, not assignable)
+        options.Tools.Add(ChatTool.CreateFunctionTool(
+            functionName: "add_skill",
+            functionDescription: "Add a skill to the user's learning path",
+            functionParameters: BinaryData.FromString("""
+            {
+                "type": "object",
+                "properties": {
+                    "skillId": {
+                        "type": "string",
+                        "description": "The ID of the skill to add"
+                    },
+                    "skillName": {
+                        "type": "string",
+                        "description": "The name of the skill (for context)"
+                    }
+                },
+                "required": ["skillId"]
+            }
+            """)));
+
+        options.Tools.Add(ChatTool.CreateFunctionTool(
+            functionName: "search_skills",
+            functionDescription: "Search for available skills by name or description",
+            functionParameters: BinaryData.FromString("""
+            {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Search query to find skills"
+                    }
+                },
+                "required": ["query"]
+            }
+            """)));
+
+        var completion = await chatClient.CompleteChatAsync(messages, options);
 
         // Check if AI wants to call functions
         var toolCalls = completion.Value.ToolCalls;
@@ -275,6 +274,11 @@ When users want to learn something, guide them through skills, topics, and cours
                     return "Error: skillId is required";
                 }
 
+                if (!Guid.TryParse(skillId, out var skillGuid))
+                {
+                    return "Error: Invalid skill ID format";
+                }
+
                 // Check if user already has this skill
                 var allUserSkills = await _store.GetAllAsync("UserSkill", 1, 1000);
                 var existing = allUserSkills.FirstOrDefault(us =>
@@ -287,7 +291,7 @@ When users want to learn something, guide them through skills, topics, and cours
                 }
 
                 // Get skill details
-                var skill = await _store.GetByIdAsync("Skill", skillId);
+                var skill = await _store.GetByIdAsync("Skill", skillGuid);
                 if (skill == null)
                 {
                     return "Skill not found";

@@ -43,23 +43,34 @@ public class SkillsController : ControllerBase
         var skillsMap = allSkills.ToDictionary(s => s.Id, s => s);
 
         // Map UserSkills with Skill details
-        var result = myUserSkills.Select(us => new
+        var result = myUserSkills.Select(us =>
         {
-            id = us.Id,
-            skillId = us["skillId"]?.ToString(),
-            userId = us["userId"]?.ToString(),
-            status = us["status"]?.ToString(),
-            startedAt = us["startedAt"]?.ToString(),
-            createdAt = us.CreatedAt,
-            skill = skillsMap.TryGetValue(us["skillId"]?.ToString() ?? "", out var skill)
-                ? new
-                {
-                    id = skill.Id,
-                    name = skill["name"]?.ToString(),
-                    description = skill["description"]?.ToString(),
-                    difficulty = skill["difficulty"]?.ToString()
-                }
-                : null
+            var skillIdStr = us["skillId"]?.ToString();
+            DynamicEntity? skillEntity = null;
+
+            if (Guid.TryParse(skillIdStr, out var skillGuid))
+            {
+                skillsMap.TryGetValue(skillGuid, out skillEntity);
+            }
+
+            return new
+            {
+                id = us.Id,
+                skillId = skillIdStr,
+                userId = us["userId"]?.ToString(),
+                status = us["status"]?.ToString(),
+                startedAt = us["startedAt"]?.ToString(),
+                createdAt = us.CreatedAt,
+                skill = skillEntity != null
+                    ? new
+                    {
+                        id = skillEntity.Id,
+                        name = skillEntity["name"]?.ToString(),
+                        description = skillEntity["description"]?.ToString(),
+                        difficulty = skillEntity["difficulty"]?.ToString()
+                    }
+                    : null
+            };
         }).ToList();
 
         return Ok(result);
@@ -80,7 +91,12 @@ public class SkillsController : ControllerBase
         }
 
         // Check if skill exists
-        var skill = await _store.GetByIdAsync("Skill", request.SkillId);
+        if (!Guid.TryParse(request.SkillId, out var skillGuid))
+        {
+            return BadRequest(new { message = "Invalid skill ID format" });
+        }
+
+        var skill = await _store.GetByIdAsync("Skill", skillGuid);
         if (skill == null)
         {
             return NotFound(new { message = "Skill not found" });
@@ -132,7 +148,12 @@ public class SkillsController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null) return Unauthorized();
 
-        var userSkill = await _store.GetByIdAsync("UserSkill", userSkillId);
+        if (!Guid.TryParse(userSkillId, out var userSkillGuid))
+        {
+            return BadRequest(new { message = "Invalid UserSkill ID format" });
+        }
+
+        var userSkill = await _store.GetByIdAsync("UserSkill", userSkillGuid);
         if (userSkill == null)
         {
             return NotFound(new { message = "UserSkill not found" });
@@ -144,7 +165,7 @@ public class SkillsController : ControllerBase
             return Forbid();
         }
 
-        await _store.DeleteAsync("UserSkill", userSkillId);
+        await _store.DeleteAsync("UserSkill", userSkillGuid);
         return Ok(new { message = "Skill removed successfully" });
     }
 }
