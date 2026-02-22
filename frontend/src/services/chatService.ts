@@ -51,13 +51,14 @@ export const chatService = {
   },
 
   async getHistory(limit = 50, courseId?: string): Promise<ChatMessage[]> {
-    const params: any = { pageSize: limit };
+    const params: any = { limit };
     if (courseId) {
       params.courseId = courseId;
     }
 
-    const response = await api.get<PagedResponse<ChatMessage>>('/chatmessage', { params });
-    return response.data.items;
+    // Use ChatController endpoint which filters by userId automatically
+    const response = await api.get<ChatMessage[]>('/chat/history', { params });
+    return response.data;
   },
 
   async startCourse(courseId: string): Promise<ChatResponse> {
