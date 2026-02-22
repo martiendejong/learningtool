@@ -1,0 +1,193 @@
+# LearningTool Entities Configuration
+# Auto-generates CRUD APIs, search, RAG embeddings, and access control
+
+entities:
+  - name: Skill
+    description: A learning skill (e.g., Web Development, AI, Mobile Development)
+    fields:
+      - name: name
+        type: string
+        required: true
+        maxLength: 200
+        searchable: true
+        indexed: true
+      - name: description
+        type: text
+        searchable: true
+      - name: difficulty
+        type: enum
+        description: "Beginner, Intermediate, Advanced"
+        defaultValue: "Beginner"
+    features:
+      crud: true
+      search: true
+      embedding: true  # RAG search for skills
+      softDelete: true
+      pagination: true
+      filtering: true
+      sorting: true
+
+  - name: Topic
+    description: A topic within a skill (e.g., React Basics, Python Fundamentals)
+    fields:
+      - name: skillId
+        type: reference
+        referencesEntity: Skill
+        required: true
+      - name: name
+        type: string
+        required: true
+        maxLength: 200
+        searchable: true
+      - name: description
+        type: text
+        searchable: true
+    features:
+      crud: true
+      search: true
+      softDelete: true
+      pagination: true
+      filtering: true
+
+  - name: Course
+    description: A course with AI-generated learning content
+    fields:
+      - name: topicId
+        type: reference
+        referencesEntity: Topic
+        required: true
+      - name: name
+        type: string
+        required: true
+        maxLength: 200
+        searchable: true
+      - name: description
+        type: text
+        searchable: true
+      - name: content
+        type: text
+        description: Course content/curriculum
+      - name: learningPlan
+        type: text
+        description: AI-generated structured curriculum (markdown)
+      - name: systemPrompt
+        type: text
+        description: AI teacher instructions for this course
+      - name: estimatedMinutes
+        type: int
+        defaultValue: "60"
+      - name: prerequisites
+        type: json
+        description: Array of prerequisite course names
+      - name: resourceLinks
+        type: json
+        description: External learning resources (YouTube, docs, etc.)
+      - name: contentGeneratedAt
+        type: dateTime
+        description: When AI content was generated
+    features:
+      crud: true
+      search: true
+      embedding: true  # RAG search for courses!
+      softDelete: true
+      pagination: true
+      filtering: true
+      sorting: true
+    access:
+      requiresAuth: false  # Public can browse courses
+      createRoles: ["Admin"]
+      updateRoles: ["Admin"]
+      deleteRoles: ["Admin"]
+
+  - name: UserSkill
+    description: User's learning path (skills they're learning)
+    fields:
+      - name: userId
+        type: string
+        required: true
+        indexed: true
+      - name: skillId
+        type: reference
+        referencesEntity: Skill
+        required: true
+      - name: startedAt
+        type: dateTime
+        defaultValue: "now"
+      - name: status
+        type: enum
+        description: "NotStarted, InProgress, Completed"
+        defaultValue: "InProgress"
+    features:
+      crud: true
+      softDelete: true
+      filtering: true
+    access:
+      requiresAuth: true
+      ownerOnly: true  # Users only see their own skills
+
+  - name: UserCourse
+    description: User's progress in a specific course
+    fields:
+      - name: userId
+        type: string
+        required: true
+        indexed: true
+      - name: courseId
+        type: reference
+        referencesEntity: Course
+        required: true
+      - name: startedAt
+        type: dateTime
+      - name: completedAt
+        type: dateTime
+      - name: minutesSpent
+        type: int
+        defaultValue: "0"
+      - name: status
+        type: enum
+        description: "NotStarted, InProgress, Completed"
+        defaultValue: "NotStarted"
+      - name: progressPercentage
+        type: int
+        defaultValue: "0"
+        minValue: 0
+        maxValue: 100
+    features:
+      crud: true
+      softDelete: true
+      filtering: true
+    access:
+      requiresAuth: true
+      ownerOnly: true  # Users only see their own progress
+
+  - name: ChatMessage
+    description: Chat history (general + course-specific teaching)
+    fields:
+      - name: userId
+        type: string
+        required: true
+        indexed: true
+      - name: role
+        type: enum
+        description: "user, assistant, system"
+        required: true
+      - name: content
+        type: text
+        required: true
+        searchable: true
+      - name: courseId
+        type: reference
+        referencesEntity: Course
+        description: "Null for general chat, set for course teaching"
+      - name: toolCalls
+        type: json
+        description: AI tool calls made (if any)
+    features:
+      crud: true
+      search: true
+      softDelete: true
+      pagination: true
+      filtering: true
+    access:
+      requiresAuth: true
+      ownerOnly: true  # Users only see their own chats

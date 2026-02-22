@@ -29,7 +29,7 @@ export default function SkillsPage() {
   };
 
 
-  const handleRemoveSkill = async (skillId: number) => {
+  const handleRemoveSkill = async (skillId: string) => {
     if (!confirm('Remove this skill and all its topics and courses?')) return;
 
     try {
@@ -41,7 +41,7 @@ export default function SkillsPage() {
     }
   };
 
-  const handleRemoveTopic = async (topicId: number) => {
+  const handleRemoveTopic = async (topicId: string) => {
     if (!confirm('Remove this topic and all its courses?')) return;
 
     try {
@@ -53,7 +53,7 @@ export default function SkillsPage() {
     }
   };
 
-  const handleStartCourse = async (courseId: number) => {
+  const handleStartCourse = async (courseId: string) => {
     try {
       await knowledgeService.startCourse(courseId);
       alert('Course started! Check your chat for course content.');

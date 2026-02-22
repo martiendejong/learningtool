@@ -79,10 +79,11 @@ export default function ChatInterface({ scrollToTop = false, onScrollComplete }:
 
     // Add user message to UI immediately
     const tempUserMsg: ChatMessage = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       userId: user?.id || '',
       role: 'user',
       content: message,
+      createdAt: new Date().toISOString(),
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, tempUserMsg]);
@@ -92,11 +93,12 @@ export default function ChatInterface({ scrollToTop = false, onScrollComplete }:
 
       // Add assistant message
       const assistantMsg: ChatMessage = {
-        id: Date.now() + 1,
+        id: crypto.randomUUID(),
         userId: user?.id || '',
         role: 'assistant',
         content: response.message,
         toolCalls: response.toolCalls ? JSON.stringify(response.toolCalls) : undefined,
+        createdAt: new Date().toISOString(),
         timestamp: new Date().toISOString(),
       };
 
@@ -108,10 +110,11 @@ export default function ChatInterface({ scrollToTop = false, onScrollComplete }:
       // If there are tool results, show them
       if (response.toolResults && response.toolResults.length > 0) {
         const toolResultsMsg: ChatMessage = {
-          id: Date.now() + 2,
+          id: crypto.randomUUID(),
           userId: user?.id || '',
           role: 'system',
           content: formatToolResults(response.toolResults),
+          createdAt: new Date().toISOString(),
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, toolResultsMsg]);
@@ -119,10 +122,11 @@ export default function ChatInterface({ scrollToTop = false, onScrollComplete }:
     } catch (err) {
       console.error('Failed to send message:', err);
       const errorMsg: ChatMessage = {
-        id: Date.now() + 1,
+        id: crypto.randomUUID(),
         userId: user?.id || '',
         role: 'system',
         content: 'Sorry, I encountered an error. Please try again.',
+        createdAt: new Date().toISOString(),
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -294,7 +298,7 @@ export default function ChatInterface({ scrollToTop = false, onScrollComplete }:
                   msg.role === 'user' ? 'text-blue-100' : 'text-gray-500'
                 }`}
               >
-                {formatTimestamp(msg.timestamp)}
+                {formatTimestamp(msg.timestamp || msg.createdAt)}
               </div>
             </div>
           </div>

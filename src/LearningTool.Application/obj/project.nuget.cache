@@ -1,17 +1,34 @@
 {
   "version": 2,
-  "dgSpecHash": "W6/onzlNSVU=",
+  "dgSpecHash": "SmL/51W3HRM=",
   "success": true,
   "projectFilePath": "C:\\Projects\\learningtool\\src\\LearningTool.Application\\LearningTool.Application.csproj",
   "expectedPackageFiles": [
+    "E:\\nuget-cache\\.nuget\\hazina.llms.classes\\2.0.0\\hazina.llms.classes.2.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\hazina.llms.client\\2.0.0\\hazina.llms.client.2.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\hazina.llms.helpers\\2.0.0\\hazina.llms.helpers.2.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\hazina.llms.openai\\2.0.0\\hazina.llms.openai.2.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\htmlagilitypack\\1.12.0\\htmlagilitypack.1.12.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\mathnet.numerics\\5.0.0\\mathnet.numerics.5.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.extensions.configuration\\10.0.0\\microsoft.extensions.configuration.10.0.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\microsoft.extensions.configuration.abstractions\\10.0.3\\microsoft.extensions.configuration.abstractions.10.0.3.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.extensions.configuration.binder\\10.0.0\\microsoft.extensions.configuration.binder.10.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.extensions.configuration.fileextensions\\10.0.0\\microsoft.extensions.configuration.fileextensions.10.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.extensions.configuration.json\\10.0.0\\microsoft.extensions.configuration.json.10.0.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.extensions.fileproviders.abstractions\\10.0.0\\microsoft.extensions.fileproviders.abstractions.10.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.extensions.fileproviders.physical\\10.0.0\\microsoft.extensions.fileproviders.physical.10.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.extensions.filesystemglobbing\\10.0.0\\microsoft.extensions.filesystemglobbing.10.0.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\microsoft.extensions.logging.abstractions\\8.0.3\\microsoft.extensions.logging.abstractions.8.0.3.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\microsoft.extensions.primitives\\10.0.3\\microsoft.extensions.primitives.10.0.3.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\openai\\2.8.0\\openai.2.8.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\sharptoken\\2.0.3\\sharptoken.2.0.3.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\system.clientmodel\\1.8.1\\system.clientmodel.1.8.1.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\system.io.pipelines\\10.0.0\\system.io.pipelines.10.0.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\system.memory.data\\8.0.1\\system.memory.data.8.0.1.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\system.net.serversentevents\\9.0.9\\system.net.serversentevents.9.0.9.nupkg.sha512"
+    "E:\\nuget-cache\\.nuget\\system.net.serversentevents\\9.0.9\\system.net.serversentevents.9.0.9.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\system.text.encodings.web\\10.0.0\\system.text.encodings.web.10.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\system.text.json\\10.0.0\\system.text.json.10.0.0.nupkg.sha512"
   ],
   "logs": []
 }

@@ -19,9 +19,9 @@ export default function TopicDetailPage() {
 
     try {
       setLoading(true);
-      const topicData = await knowledgeService.getTopicById(parseInt(id));
+      const topicData = await knowledgeService.getTopicById(id);
       setTopic(topicData);
-      const coursesData = await knowledgeService.getCoursesForTopic(parseInt(id));
+      const coursesData = await knowledgeService.getCoursesForTopic(id);
       setCourses(coursesData);
     } catch (err) {
       console.error('Failed to load topic:', err);
@@ -86,10 +86,10 @@ export default function TopicDetailPage() {
                   <p className="text-sm text-gray-600 mb-2">{course.description}</p>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
                     <span>⏱️ {Math.round(course.estimatedMinutes / 60)}h</span>
-                    {course.prerequisites.length > 0 && (
+                    {course.prerequisites && course.prerequisites.length > 0 && (
                       <span>📋 {course.prerequisites.length} prerequisites</span>
                     )}
-                    <span>📚 {course.resourceLinks.length} resources</span>
+                    <span>📚 {course.resourceLinks?.length || 0} resources</span>
                   </div>
                 </div>
               ))}

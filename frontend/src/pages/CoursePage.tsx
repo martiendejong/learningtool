@@ -15,11 +15,11 @@ export default function CoursePage() {
 
   useEffect(() => {
     if (courseId) {
-      loadCourse(parseInt(courseId));
+      loadCourse(courseId);
     }
   }, [courseId]);
 
-  const loadCourse = async (id: number) => {
+  const loadCourse = async (id: string) => {
     try {
       setLoading(true);
       const courseData = await knowledgeService.getCourse(id);
@@ -42,7 +42,7 @@ export default function CoursePage() {
 
     try {
       // Start the course in the backend
-      const userCourseData = await knowledgeService.startCourse(parseInt(courseId));
+      const userCourseData = await knowledgeService.startCourse(courseId);
       setUserCourse(userCourseData);
       setError('');
 
@@ -59,7 +59,9 @@ export default function CoursePage() {
 
     try {
       setCompleting(true);
-      await knowledgeService.completeCourse(parseInt(courseId), score);
+      // Estimate minutes spent (could be tracked more accurately in production)
+      const minutesSpent = userCourse?.minutesSpent || Math.round((Date.now() - new Date(userCourse?.startedAt || Date.now()).getTime()) / 60000);
+      await knowledgeService.completeCourse(courseId, minutesSpent);
       navigate('/timeline');
     } catch (err) {
       console.error('Failed to complete course:', err);
@@ -128,10 +130,10 @@ export default function CoursePage() {
           <p className="text-gray-600">{course.description}</p>
           <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
             <span>⏱️ {Math.round(course.estimatedMinutes / 60)} hours</span>
-            {course.prerequisites.length > 0 && (
+            {course.prerequisites && course.prerequisites.length > 0 && (
               <span>📋 {course.prerequisites.length} prerequisites</span>
             )}
-            <span>📎 {course.resourceLinks.length} resources</span>
+            <span>📎 {course.resourceLinks?.length || 0} resources</span>
           </div>
         </div>
 
@@ -142,7 +144,7 @@ export default function CoursePage() {
         )}
 
         {/* Prerequisites */}
-        {course.prerequisites.length > 0 && (
+        {course.prerequisites && course.prerequisites.length > 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <h3 className="font-semibold text-yellow-900 mb-2">Prerequisites</h3>
             <ul className="list-disc list-inside text-yellow-800">
@@ -171,7 +173,7 @@ export default function CoursePage() {
         {/* Resources */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Learning Resources</h2>
-          {course.resourceLinks.length === 0 ? (
+          {!course.resourceLinks || course.resourceLinks.length === 0 ? (
             <p className="text-gray-500">No resources available yet</p>
           ) : (
             <div className="space-y-3">
@@ -256,7 +258,7 @@ export default function CoursePage() {
               <h2 className="text-xl font-semibold text-green-900">Course Completed!</h2>
             </div>
             <p className="text-green-800 mb-4">
-              You completed this course with a score of {userCourse.score}%. Great work!
+              You completed this course! {userCourse.minutesSpent && `Time spent: ${userCourse.minutesSpent} minutes.`} Great work!
             </p>
             <button
               onClick={() => navigate('/timeline')}

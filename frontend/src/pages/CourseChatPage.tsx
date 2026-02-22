@@ -63,10 +63,11 @@ export default function CourseChatPage() {
 
     // Add user message to UI immediately
     const tempUserMsg: ChatMessage = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       userId: user?.id || '',
       role: 'user',
       content: message,
+      createdAt: new Date().toISOString(),
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, tempUserMsg]);
@@ -78,11 +79,12 @@ export default function CourseChatPage() {
 
       // Add assistant message
       const assistantMsg: ChatMessage = {
-        id: Date.now() + 1,
+        id: crypto.randomUUID(),
         userId: user?.id || '',
         role: 'assistant',
         content: response.data.message,
         toolCalls: response.data.toolCalls ? JSON.stringify(response.data.toolCalls) : undefined,
+        createdAt: new Date().toISOString(),
         timestamp: new Date().toISOString(),
       };
 
@@ -93,10 +95,11 @@ export default function CourseChatPage() {
         const successResults = response.data.toolResults.filter((r: any) => r.success);
         if (successResults.length > 0) {
           const toolResultsMsg: ChatMessage = {
-            id: Date.now() + 2,
+            id: crypto.randomUUID(),
             userId: user?.id || '',
             role: 'system',
             content: successResults.map((r: any) => `✓ ${r.result}`).join('\n'),
+            createdAt: new Date().toISOString(),
             timestamp: new Date().toISOString(),
           };
           setMessages((prev) => [...prev, toolResultsMsg]);
@@ -105,10 +108,11 @@ export default function CourseChatPage() {
     } catch (err) {
       console.error('Failed to send message:', err);
       const errorMsg: ChatMessage = {
-        id: Date.now() + 1,
+        id: crypto.randomUUID(),
         userId: user?.id || '',
         role: 'system',
         content: 'Sorry, I encountered an error. Please try again.',
+        createdAt: new Date().toISOString(),
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -230,7 +234,7 @@ export default function CourseChatPage() {
                   msg.role === 'user' ? 'text-blue-100' : 'text-gray-500'
                 }`}
               >
-                {formatTimestamp(msg.timestamp)}
+                {formatTimestamp(msg.timestamp || msg.createdAt)}
               </div>
             </div>
           </div>

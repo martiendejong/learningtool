@@ -39,12 +39,6 @@ export default function TimelinePage() {
     });
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 70) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -87,6 +81,8 @@ export default function TimelinePage() {
             <div className="space-y-8">
               {completedCourses.map((userCourse, index) => {
                 const course = userCourse.course;
+                if (!course) return null;
+
                 const isFirst = index === 0;
 
                 return (
@@ -107,12 +103,12 @@ export default function TimelinePage() {
                           </h3>
                           <p className="text-gray-600 mb-2">{course.description}</p>
                         </div>
-                        {userCourse.score !== undefined && (
+                        {userCourse.progressPercentage !== undefined && (
                           <div className="ml-4">
-                            <div className={`text-3xl font-bold ${getScoreColor(userCourse.score)}`}>
-                              {userCourse.score}%
+                            <div className="text-3xl font-bold text-green-600">
+                              {userCourse.progressPercentage}%
                             </div>
-                            <div className="text-xs text-gray-500 text-center">Score</div>
+                            <div className="text-xs text-gray-500 text-center">Complete</div>
                           </div>
                         )}
                       </div>
@@ -128,7 +124,7 @@ export default function TimelinePage() {
                           <span>⏱️</span>
                           <span>{Math.round(course.estimatedMinutes / 60)} hours</span>
                         </div>
-                        {course.resourceLinks.length > 0 && (
+                        {course.resourceLinks && course.resourceLinks.length > 0 && (
                           <div className="flex items-center gap-1">
                             <span>📎</span>
                             <span>{course.resourceLinks.length} resources</span>
@@ -136,7 +132,7 @@ export default function TimelinePage() {
                         )}
                       </div>
 
-                      {course.prerequisites.length > 0 && (
+                      {course.prerequisites && course.prerequisites.length > 0 && (
                         <div className="mt-3 pt-3 border-t border-gray-100">
                           <div className="text-xs text-gray-500">
                             Built upon: {course.prerequisites.join(', ')}

@@ -4,17 +4,17 @@ import type { UserSkill, Topic, Course } from '../services/knowledgeService';
 
 interface TreeViewProps {
   skills: UserSkill[];
-  onRemoveSkill: (skillId: number) => void;
-  onRemoveTopic: (topicId: number) => void;
-  onStartCourse: (courseId: number) => void;
+  onRemoveSkill: (skillId: string) => void;
+  onRemoveTopic: (topicId: string) => void;
+  onStartCourse: (courseId: string) => void;
 }
 
 export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStartCourse: _onStartCourse }: TreeViewProps) {
   const navigate = useNavigate();
-  const [expandedSkills, setExpandedSkills] = useState<Set<number>>(new Set());
-  const [expandedTopics, setExpandedTopics] = useState<Set<number>>(new Set());
+  const [expandedSkills, setExpandedSkills] = useState<Set<string>>(new Set());
+  const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
 
-  const toggleSkill = (skillId: number) => {
+  const toggleSkill = (skillId: string) => {
     const newExpanded = new Set(expandedSkills);
     if (newExpanded.has(skillId)) {
       newExpanded.delete(skillId);
@@ -24,7 +24,7 @@ export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStart
     setExpandedSkills(newExpanded);
   };
 
-  const toggleTopic = (topicId: number) => {
+  const toggleTopic = (topicId: string) => {
     const newExpanded = new Set(expandedTopics);
     if (newExpanded.has(topicId)) {
       newExpanded.delete(topicId);
@@ -64,6 +64,8 @@ export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStart
     <div className="space-y-2">
       {skills.map((userSkill) => {
         const skill = userSkill.skill;
+        if (!skill) return null;
+
         const isExpanded = expandedSkills.has(skill.id);
 
         return (
@@ -173,13 +175,13 @@ export default function TreeView({ skills, onRemoveSkill, onRemoveTopic, onStart
                                     <span className="text-xs text-gray-500">
                                       {Math.round(course.estimatedMinutes / 60)}h
                                     </span>
-                                    {course.prerequisites.length > 0 && (
+                                    {course.prerequisites && course.prerequisites.length > 0 && (
                                       <span className="text-xs text-orange-600">
                                         Prerequisites: {course.prerequisites.length}
                                       </span>
                                     )}
                                     <span className="text-xs text-blue-600">
-                                      {course.resourceLinks.length} resources
+                                      {course.resourceLinks?.length || 0} resources
                                     </span>
                                   </div>
                                 </div>

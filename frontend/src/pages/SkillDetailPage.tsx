@@ -19,9 +19,9 @@ export default function SkillDetailPage() {
 
     try {
       setLoading(true);
-      const skillData = await knowledgeService.getSkillById(parseInt(id));
+      const skillData = await knowledgeService.getSkillById(id);
       setSkill(skillData);
-      const topicsData = await knowledgeService.getTopicsForSkill(parseInt(id));
+      const topicsData = await knowledgeService.getTopicsForSkill(id);
       setTopics(topicsData);
     } catch (err) {
       console.error('Failed to load skill:', err);

@@ -1,438 +1,183 @@
-using LearningTool.Application.DTOs;
-using LearningTool.Application.Services;
-using LearningTool.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Hazina.API.Generic.Dynamic;
+using System.ClientModel;
+using OpenAI;
+using OpenAI.Chat;
 
 namespace LearningTool.API.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 [Authorize]
 public class ChatController : ControllerBase
 {
-    private readonly IChatService _chatService;
-    private readonly IKnowledgeService _knowledgeService;
-    private readonly IUserLearningService _userLearningService;
+    private readonly DynamicEntityStore _store;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<ChatController> _logger;
 
     public ChatController(
-        IChatService chatService,
-        IKnowledgeService knowledgeService,
-        IUserLearningService userLearningService)
+        DynamicEntityStore store,
+        IConfiguration configuration,
+        ILogger<ChatController> logger)
     {
-        _chatService = chatService;
-        _knowledgeService = knowledgeService;
-        _userLearningService = userLearningService;
+        _store = store;
+        _configuration = configuration;
+        _logger = logger;
     }
 
     /// <summary>
     /// Send a message to the AI assistant
     /// </summary>
     [HttpPost("message")]
-    public async Task<ActionResult<ChatResponse>> SendMessage([FromBody] ChatRequest request)
+    public async Task<ActionResult> SendMessage([FromBody] ChatRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null) return Unauthorized();
 
-        var response = await _chatService.ProcessMessageAsync(userId, request.Message);
-
-        // If tools were called, execute them
-        if (response.ToolCalls != null && response.ToolCalls.Any())
+        // Save user message using DynamicEntity
+        var userMessage = new DynamicEntity();
+        userMessage["userId"] = userId;
+        userMessage["role"] = "user";
+        userMessage["content"] = request.Message;
+        if (request.CourseId.HasValue)
         {
-            var results = await ExecuteToolCallsAsync(userId, response.ToolCalls);
-
-            // Add tool results to response
-            return Ok(new
-            {
-                response.Message,
-                response.ToolCalls,
-                response.RequiresAction,
-                ToolResults = results
-            });
+            userMessage["courseId"] = request.CourseId.Value;
         }
 
-        return Ok(response);
+        await _store.CreateAsync("ChatMessage", userMessage);
+
+        // Get OpenAI configuration
+        var apiKey = _configuration["OpenAI:ApiKey"] ?? throw new InvalidOperationException("OpenAI API Key not configured");
+        var model = _configuration["OpenAI:Model"] ?? "gpt-4o-mini";
+
+        // Initialize OpenAI client
+        var client = new OpenAIClient(new ApiKeyCredential(apiKey));
+        var chatClient = client.GetChatClient(model);
+
+        // Build conversation history
+        var messages = new List<ChatMessage>
+        {
+            ChatMessage.CreateSystemMessage(@"You are an intelligent AI learning assistant.
+Help users build learning paths and answer questions about courses.
+When users want to learn something, guide them through skills, topics, and courses.")
+        };
+
+        // Add recent chat history (last 10 messages)
+        // Note: DynamicEntityStore doesn't have QueryAsync, using GetAllAsync instead
+        var allMessages = await _store.GetAllAsync("ChatMessage", 1, 100);
+
+        // Filter by userId and courseId
+        var filteredMessages = allMessages
+            .Where(m => m["userId"]?.ToString() == userId)
+            .Where(m => request.CourseId.HasValue
+                ? m["courseId"]?.ToString() == request.CourseId.Value.ToString()
+                : m["courseId"] == null)
+            .OrderByDescending(m => m.CreatedAt)
+            .Take(10)
+            .OrderBy(m => m.CreatedAt)
+            .ToList();
+
+        foreach (var msg in filteredMessages)
+        {
+            var role = msg["role"]?.ToString() ?? "user";
+            var content = msg["content"]?.ToString() ?? "";
+
+            messages.Add(role == "user"
+                ? ChatMessage.CreateUserMessage(content)
+                : ChatMessage.CreateAssistantMessage(content));
+        }
+
+        // Add current message
+        messages.Add(ChatMessage.CreateUserMessage(request.Message));
+
+        // Call OpenAI
+        var completion = await chatClient.CompleteChatAsync(messages, new ChatCompletionOptions
+        {
+            MaxOutputTokenCount = 800,
+            Temperature = 0.7f
+        });
+
+        var assistantMessage = completion.Value.Content[0].Text;
+
+        // Save assistant response
+        var assistantMsg = new DynamicEntity();
+        assistantMsg["userId"] = userId;
+        assistantMsg["role"] = "assistant";
+        assistantMsg["content"] = assistantMessage;
+        if (request.CourseId.HasValue)
+        {
+            assistantMsg["courseId"] = request.CourseId.Value;
+        }
+
+        await _store.CreateAsync("ChatMessage", assistantMsg);
+
+        return Ok(new
+        {
+            Message = assistantMessage,
+            RequiresAction = false
+        });
     }
 
     /// <summary>
     /// Get chat history
     /// </summary>
     [HttpGet("history")]
-    public async Task<IActionResult> GetHistory([FromQuery] int limit = 50)
+    public async Task<IActionResult> GetHistory([FromQuery] int limit = 50, [FromQuery] int? courseId = null)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null) return Unauthorized();
 
-        var history = await _chatService.GetChatHistoryAsync(userId, limit);
-        return Ok(history);
-    }
+        var allMessages = await _store.GetAllAsync("ChatMessage", 1, 200);
 
-    /// <summary>
-    /// Start a course and add initial message to chat
-    /// </summary>
-    [HttpPost("start-course")]
-    public async Task<ActionResult<ChatResponse>> StartCourse([FromBody] StartCourseRequest request)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null) return Unauthorized();
+        var filteredMessages = allMessages
+            .Where(m => m["userId"]?.ToString() == userId)
+            .Where(m => courseId.HasValue
+                ? m["courseId"]?.ToString() == courseId.Value.ToString()
+                : m["courseId"] == null)
+            .OrderBy(m => m.CreatedAt)
+            .Take(limit)
+            .Select(m => new
+            {
+                Role = m["role"]?.ToString() ?? "user",
+                Content = m["content"]?.ToString() ?? "",
+                Timestamp = m.CreatedAt
+            })
+            .ToList();
 
-        // Get course details
-        var course = await _knowledgeService.GetCourseByIdAsync(request.CourseId);
-        if (course == null)
-        {
-            return NotFound(new { message = "Course not found" });
-        }
-
-        // Start course for user
-        await _userLearningService.StartCourseAsync(userId, request.CourseId);
-
-        // Generate AI course content if not already generated
-        if (course.ContentGeneratedAt == null)
-        {
-            var (learningPlan, systemPrompt, resources) = await _chatService.GenerateCourseContentAsync(course);
-            await _knowledgeService.UpdateCourseContentAsync(course.Id, learningPlan, systemPrompt, resources);
-
-            // Reload course with updated content
-            course = await _knowledgeService.GetCourseByIdAsync(request.CourseId);
-        }
-
-        // Clear COURSE chat history for clean start (not general chat!)
-        await _chatService.ClearCourseChatHistoryAsync(userId, request.CourseId);
-
-        // Create initial COURSE chat message
-        var message = $"I want to start the course '{course.Name}'. Please teach me step by step.";
-        var response = await _chatService.ProcessCourseMessageAsync(userId, request.CourseId, message);
-
-        return Ok(response);
+        return Ok(filteredMessages);
     }
 
     /// <summary>
     /// Clear chat history
     /// </summary>
     [HttpDelete("history")]
-    public async Task<IActionResult> ClearHistory()
+    public async Task<IActionResult> ClearHistory([FromQuery] int? courseId = null)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null) return Unauthorized();
 
-        await _chatService.ClearChatHistoryAsync(userId);
-        return Ok(new { message = "Chat history cleared" });
-    }
+        var allMessages = await _store.GetAllAsync("ChatMessage", 1, 1000);
 
-    /// <summary>
-    /// Send a message in course-specific teaching mode
-    /// </summary>
-    [HttpPost("course/{courseId}/message")]
-    public async Task<ActionResult<ChatResponse>> SendCourseMessage(int courseId, [FromBody] ChatRequest request)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null) return Unauthorized();
+        var messagesToDelete = allMessages
+            .Where(m => m["userId"]?.ToString() == userId)
+            .Where(m => courseId.HasValue
+                ? m["courseId"]?.ToString() == courseId.Value.ToString()
+                : m["courseId"] == null)
+            .ToList();
 
-        var response = await _chatService.ProcessCourseMessageAsync(userId, courseId, request.Message);
-
-        // If tools were called, execute them
-        if (response.ToolCalls != null && response.ToolCalls.Any())
+        foreach (var msg in messagesToDelete)
         {
-            var results = await ExecuteCourseToolCallsAsync(userId, courseId, response.ToolCalls);
-
-            return Ok(new
-            {
-                response.Message,
-                response.ToolCalls,
-                response.RequiresAction,
-                ToolResults = results
-            });
+            await _store.DeleteAsync("ChatMessage", msg.Id);
         }
 
-        return Ok(response);
-    }
-
-    /// <summary>
-    /// Get course-specific chat history
-    /// </summary>
-    [HttpGet("course/{courseId}/history")]
-    public async Task<IActionResult> GetCourseHistory(int courseId, [FromQuery] int limit = 50)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null) return Unauthorized();
-
-        var history = await _chatService.GetCourseChatHistoryAsync(userId, courseId, limit);
-        return Ok(history);
-    }
-
-    /// <summary>
-    /// Clear course-specific chat history
-    /// </summary>
-    [HttpDelete("course/{courseId}/history")]
-    public async Task<IActionResult> ClearCourseHistory(int courseId)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null) return Unauthorized();
-
-        await _chatService.ClearCourseChatHistoryAsync(userId, courseId);
-        return Ok(new { message = "Course chat history cleared" });
-    }
-
-    private async Task<List<ToolResult>> ExecuteToolCallsAsync(string userId, List<ToolCall> toolCalls)
-    {
-        var results = new List<ToolResult>();
-
-        foreach (var toolCall in toolCalls)
-        {
-            var result = await ExecuteToolAsync(userId, toolCall);
-            results.Add(result);
-        }
-
-        return results;
-    }
-
-    private async Task<ToolResult> ExecuteToolAsync(string userId, ToolCall toolCall)
-    {
-        try
-        {
-            switch (toolCall.ToolName)
-            {
-                case "search_library":
-                    {
-                        var query = toolCall.Arguments["query"].ToString()!;
-                        var results = await _knowledgeService.SearchLibraryAsync(query);
-
-                        if (results.Any())
-                        {
-                            var summary = string.Join("\n", results.Select(s =>
-                                $"Skill: {s.Name}\n" +
-                                $"  Topics: {string.Join(", ", s.Topics.Select(t => t.Name))}\n" +
-                                $"  Courses: {string.Join(", ", s.Topics.SelectMany(t => t.Courses).Select(c => c.Name))}"
-                            ));
-
-                            return new ToolResult
-                            {
-                                ToolCallId = toolCall.Id,
-                                Success = true,
-                                Result = $"Found {results.Count} matching skill(s) in library:\n{summary}",
-                                Data = results
-                            };
-                        }
-                        else
-                        {
-                            return new ToolResult
-                            {
-                                ToolCallId = toolCall.Id,
-                                Success = true,
-                                Result = "No matching skills found in library. You can create a new custom learning path.",
-                                Data = new List<object>()
-                            };
-                        }
-                    }
-
-                case "add_skill":
-                    {
-                        var name = toolCall.Arguments["name"].ToString()!;
-
-                        var skill = await _knowledgeService.FindOrCreateSkillAsync(name);
-                        var userSkill = await _userLearningService.AddSkillToUserAsync(userId, skill!.Id);
-
-                        return new ToolResult
-                        {
-                            ToolCallId = toolCall.Id,
-                            Success = true,
-                            Result = $"Added skill '{name}' with ID {skill.Id}. Use this ID: {skill.Id}",
-                            Data = new { skillId = skill.Id, skill = skill, userSkill = userSkill }
-                        };
-                    }
-
-                case "remove_skill":
-                    {
-                        var skillId = Convert.ToInt32(toolCall.Arguments["skillId"]);
-                        await _userLearningService.RemoveSkillFromUserAsync(userId, skillId);
-
-                        return new ToolResult
-                        {
-                            ToolCallId = toolCall.Id,
-                            Success = true,
-                            Result = $"Removed skill"
-                        };
-                    }
-
-                case "add_topic":
-                    {
-                        var skillId = Convert.ToInt32(toolCall.Arguments["skillId"]);
-                        var name = toolCall.Arguments["name"].ToString()!;
-                        var description = toolCall.Arguments.ContainsKey("description")
-                            ? toolCall.Arguments["description"].ToString() ?? ""
-                            : "";
-
-                        var topic = await _knowledgeService.AddTopicAsync(skillId, name, description);
-
-                        return new ToolResult
-                        {
-                            ToolCallId = toolCall.Id,
-                            Success = true,
-                            Result = $"Added topic '{name}' with ID {topic!.Id}. Use this ID: {topic.Id}",
-                            Data = new { topicId = topic.Id, topic = topic }
-                        };
-                    }
-
-                case "add_course":
-                    {
-                        var topicId = Convert.ToInt32(toolCall.Arguments["topicId"]);
-                        var name = toolCall.Arguments["name"].ToString()!;
-                        var description = toolCall.Arguments.ContainsKey("description")
-                            ? toolCall.Arguments["description"].ToString() ?? ""
-                            : "";
-                        var content = toolCall.Arguments.ContainsKey("content")
-                            ? toolCall.Arguments["content"].ToString() ?? ""
-                            : "";
-                        var estimatedMinutes = toolCall.Arguments.ContainsKey("estimatedMinutes")
-                            ? Convert.ToInt32(toolCall.Arguments["estimatedMinutes"])
-                            : 60;
-                        var prerequisites = new List<string>();
-                        var resourceLinks = new List<ResourceLink>();
-
-                        var course = await _knowledgeService.AddCourseAsync(topicId, name, description, content, estimatedMinutes, prerequisites, resourceLinks);
-
-                        return new ToolResult
-                        {
-                            ToolCallId = toolCall.Id,
-                            Success = true,
-                            Result = $"Added course '{name}' with ID {course!.Id}. Use this ID: {course.Id}",
-                            Data = new { courseId = course.Id, course = course }
-                        };
-                    }
-
-                case "get_user_skills":
-                    {
-                        var skills = await _userLearningService.GetUserSkillsAsync(userId);
-
-                        return new ToolResult
-                        {
-                            ToolCallId = toolCall.Id,
-                            Success = true,
-                            Result = $"Retrieved {skills.Count} skills",
-                            Data = skills
-                        };
-                    }
-
-                default:
-                    return new ToolResult
-                    {
-                        ToolCallId = toolCall.Id,
-                        Success = false,
-                        Result = $"Unknown tool: {toolCall.ToolName}"
-                    };
-            }
-        }
-        catch (Exception ex)
-        {
-            return new ToolResult
-            {
-                ToolCallId = toolCall.Id,
-                Success = false,
-                Result = $"Error executing tool: {ex.Message}"
-            };
-        }
-    }
-
-    private async Task<List<ToolResult>> ExecuteCourseToolCallsAsync(string userId, int courseId, List<ToolCall> toolCalls)
-    {
-        var results = new List<ToolResult>();
-
-        foreach (var toolCall in toolCalls)
-        {
-            var result = await ExecuteCourseToolAsync(userId, courseId, toolCall);
-            results.Add(result);
-        }
-
-        return results;
-    }
-
-    private async Task<ToolResult> ExecuteCourseToolAsync(string userId, int courseId, ToolCall toolCall)
-    {
-        try
-        {
-            switch (toolCall.ToolName)
-            {
-                case "get_course_content":
-                    {
-                        var course = await _knowledgeService.GetCourseByIdAsync(courseId);
-                        if (course == null)
-                        {
-                            return new ToolResult
-                            {
-                                ToolCallId = toolCall.Id,
-                                Success = false,
-                                Result = "Course not found"
-                            };
-                        }
-
-                        return new ToolResult
-                        {
-                            ToolCallId = toolCall.Id,
-                            Success = true,
-                            Result = $"Course: {course.Name}\nContent: {course.Content}",
-                            Data = course
-                        };
-                    }
-
-                case "mark_section_complete":
-                    {
-                        var sectionName = toolCall.Arguments["sectionName"].ToString();
-                        return new ToolResult
-                        {
-                            ToolCallId = toolCall.Id,
-                            Success = true,
-                            Result = $"Section '{sectionName}' marked as complete"
-                        };
-                    }
-
-                case "get_student_progress":
-                    {
-                        var userCourse = await _userLearningService.GetUserCourseAsync(userId, courseId);
-                        if (userCourse == null)
-                        {
-                            return new ToolResult
-                            {
-                                ToolCallId = toolCall.Id,
-                                Success = true,
-                                Result = "Not started yet",
-                                Data = new { progressPercentage = 0, startedAt = (DateTime?)null }
-                            };
-                        }
-
-                        var course = await _knowledgeService.GetCourseByIdAsync(courseId);
-                        var progressPercentage = course != null && course.EstimatedMinutes > 0
-                            ? Math.Min(100, (int)((userCourse.MinutesSpent / (float)course.EstimatedMinutes) * 100))
-                            : 0;
-
-                        return new ToolResult
-                        {
-                            ToolCallId = toolCall.Id,
-                            Success = true,
-                            Result = $"Progress: {progressPercentage}%",
-                            Data = new { progressPercentage, minutesSpent = userCourse.MinutesSpent, status = userCourse.Status }
-                        };
-                    }
-
-                default:
-                    return new ToolResult
-                    {
-                        ToolCallId = toolCall.Id,
-                        Success = false,
-                        Result = $"Unknown tool: {toolCall.ToolName}"
-                    };
-            }
-        }
-        catch (Exception ex)
-        {
-            return new ToolResult
-            {
-                ToolCallId = toolCall.Id,
-                Success = false,
-                Result = $"Error executing tool: {ex.Message}"
-            };
-        }
+        return Ok(new { message = $"Cleared {messagesToDelete.Count} messages" });
     }
 }
 
-public record StartCourseRequest(int CourseId);
+public class ChatRequest
+{
+    public string Message { get; set; } = "";
+    public int? CourseId { get; set; }
+}

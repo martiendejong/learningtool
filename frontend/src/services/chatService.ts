@@ -1,12 +1,24 @@
 import api from './api';
 
+// Hazina paged response
+interface PagedResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export interface ChatMessage {
-  id: number;
+  id: string;  // GUID
   userId: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  courseId?: string;  // GUID, optional
   toolCalls?: string; // JSON serialized
-  timestamp: string;
+  createdAt: string;
+  updatedAt?: string;
+  timestamp?: string; // Alias for createdAt for backwards compatibility
 }
 
 export interface ToolCall {
@@ -30,22 +42,46 @@ export interface ChatResponse {
 }
 
 export const chatService = {
-  async sendMessage(message: string): Promise<ChatResponse> {
-    const response = await api.post<ChatResponse>('/chat/message', { message });
+  // Note: This endpoint would need a custom controller implementation
+  // The Hazina entities.yaml doesn't handle AI chat logic, only storage
+  async sendMessage(message: string, courseId?: string): Promise<ChatResponse> {
+    // This would need to be implemented in a custom ChatController
+    const response = await api.post<ChatResponse>('/chat/message', { message, courseId });
     return response.data;
   },
 
-  async getHistory(limit = 50): Promise<ChatMessage[]> {
-    const response = await api.get<ChatMessage[]>('/chat/history', { params: { limit } });
-    return response.data;
+  async getHistory(limit = 50, courseId?: string): Promise<ChatMessage[]> {
+    const params: any = { pageSize: limit };
+    if (courseId) {
+      params.courseId = courseId;
+    }
+
+    const response = await api.get<PagedResponse<ChatMessage>>('/chatmessage', { params });
+    return response.data.items;
   },
 
-  async startCourse(courseId: number): Promise<ChatResponse> {
+  async startCourse(courseId: string): Promise<ChatResponse> {
+    // This would need to be implemented in a custom ChatController
     const response = await api.post<ChatResponse>('/chat/start-course', { courseId });
     return response.data;
   },
 
   async clearHistory(): Promise<void> {
-    await api.delete('/chat/history');
+    // Delete all chat messages for current user
+    // This would need implementation - either soft delete all or custom endpoint
+    const messages = await this.getHistory(1000);
+    for (const message of messages) {
+      await api.delete(`/chatmessage/${message.id}`);
+    }
+  },
+
+  // New method to save a message directly to Hazina
+  async saveMessage(role: 'user' | 'assistant' | 'system', content: string, courseId?: string): Promise<ChatMessage> {
+    const response = await api.post<ChatMessage>('/chatmessage', {
+      role,
+      content,
+      courseId: courseId || null
+    });
+    return response.data;
   },
 };

@@ -20,7 +20,7 @@ export default function CourseDetailPage() {
 
     try {
       setLoading(true);
-      const courseData = await knowledgeService.getCourseById(parseInt(id));
+      const courseData = await knowledgeService.getCourseById(id);
       setCourse(courseData);
     } catch (err) {
       console.error('Failed to load course:', err);
@@ -117,7 +117,7 @@ export default function CourseDetailPage() {
           {/* Right Column */}
           <div className="space-y-6">
             {/* Prerequisites */}
-            {course.prerequisites.length > 0 && (
+            {course.prerequisites && course.prerequisites.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-4">Prerequisites</h2>
                 <ul className="space-y-2">
@@ -132,7 +132,7 @@ export default function CourseDetailPage() {
             )}
 
             {/* Resources */}
-            {course.resourceLinks.length > 0 && (
+            {course.resourceLinks && course.resourceLinks.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-4">Resources</h2>
                 <ul className="space-y-2">

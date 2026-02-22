@@ -12,7 +12,7 @@ export default function SkillBrowserModal({ isOpen, onClose, onSkillAdded }: Ski
   const [filteredSkills, setFilteredSkills] = useState<Skill[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
-  const [adding, setAdding] = useState<number | null>(null);
+  const [adding, setAdding] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {

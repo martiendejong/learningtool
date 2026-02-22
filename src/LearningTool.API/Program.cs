@@ -1,22 +1,20 @@
-using LearningTool.Application.Services;
-using LearningTool.Domain.Interfaces;
-using LearningTool.Infrastructure.Data;
-using LearningTool.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Hazina.API.Generic.Dynamic;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database configuration
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Data Source=learningtool.db";
+// Identity Database (separate from Hazina entities)
+var identityConnectionString = builder.Configuration.GetConnectionString("IdentityConnection")
+    ?? "Data Source=identity.db";
 
-builder.Services.AddDbContext<LearningToolDbContext>(options =>
-    options.UseSqlite(connectionString));
+builder.Services.AddDbContext<IdentityDbContext>(options =>
+    options.UseSqlite(identityConnectionString));
 
 // Identity configuration
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -31,7 +29,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     // User settings
     options.User.RequireUniqueEmail = true;
 })
-.AddEntityFrameworkStores<LearningToolDbContext>()
+.AddEntityFrameworkStores<IdentityDbContext>()
 .AddDefaultTokenProviders();
 
 // Authentication configuration
@@ -57,35 +55,20 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
 });
-// Google OAuth disabled for now - uncomment when ClientId/Secret configured
-//.AddGoogle(options =>
-//{
-//    options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
-//    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
-//});
 
 builder.Services.AddAuthorization();
 
-// Repository registration
-builder.Services.AddScoped<ISkillRepository, SkillRepository>();
-builder.Services.AddScoped<ITopicRepository, TopicRepository>();
-builder.Services.AddScoped<ICourseRepository, CourseRepository>();
-builder.Services.AddScoped<IUserSkillRepository, UserSkillRepository>();
-builder.Services.AddScoped<IUserTopicRepository, UserTopicRepository>();
-builder.Services.AddScoped<IUserCourseRepository, UserCourseRepository>();
-builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
-
-// Service registration
-builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
-builder.Services.AddScoped<IUserLearningService, UserLearningService>();
-builder.Services.AddScoped<IChatService, ChatService>();
+// Hazina Dynamic API - ALL entity management via entities.yaml
+var entitiesYamlPath = Path.Combine(builder.Environment.ContentRootPath, "entities.yaml");
+var hazinaDbPath = Path.Combine(builder.Environment.ContentRootPath, "hazina-entities.db");
+builder.Services.AddHazinaDynamicApi(entitiesYamlPath, hazinaDbPath);
 
 // CORS configuration
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5190", "http://localhost:5191", "http://localhost:5192", "http://localhost:3000")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5190", "http://localhost:5191", "http://localhost:5192", "http://localhost:5193", "http://localhost:5194", "http://localhost:3000")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -105,9 +88,9 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "LearningTool API",
-        Version = "v1",
-        Description = "AI-powered learning management system API"
+        Title = "LearningTool API - Hazina Powered",
+        Version = "v2.0",
+        Description = "AI-powered learning management system with Hazina Dynamic API"
     });
 
     // JWT authentication in Swagger
@@ -144,25 +127,15 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
-    // Auto-apply migrations in development - DISABLED FOR PRODUCTION DEPLOY
-    // Migration already applied manually to production database
-    // using (var scope = app.Services.CreateScope())
-    // {
-    //     var db = scope.ServiceProvider.GetRequiredService<LearningToolDbContext>();
-    //     db.Database.Migrate();
-
-    //     // Seed initial data
-    //     await DataSeeder.SeedAsync(db);
-    // }
 }
-
-// app.UseHttpsRedirection(); // Temporarily disabled for production - SSL certificate needs configuration
 
 app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Hazina Dynamic API endpoints
+app.UseHazinaDynamicApi();
 
 app.MapControllers();
 
