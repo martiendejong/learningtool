@@ -5,6 +5,7 @@ using Hazina.API.Generic.Dynamic;
 using System.ClientModel;
 using OpenAI;
 using OpenAI.Chat;
+using System.Text.Json;
 
 namespace LearningTool.API.Controllers;
 
@@ -92,26 +93,133 @@ When users want to learn something, guide them through skills, topics, and cours
         // Add current message
         messages.Add(ChatMessage.CreateUserMessage(request.Message));
 
-        // Call OpenAI
+        // Define tools for AI to use
+        var tools = new List<ChatTool>
+        {
+            ChatTool.CreateFunctionTool(
+                functionName: "add_skill",
+                functionDescription: "Add a skill to the user's learning path",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "skillId": {
+                            "type": "string",
+                            "description": "The ID of the skill to add"
+                        },
+                        "skillName": {
+                            "type": "string",
+                            "description": "The name of the skill (for context)"
+                        }
+                    },
+                    "required": ["skillId"]
+                }
+                """)),
+            ChatTool.CreateFunctionTool(
+                functionName: "search_skills",
+                functionDescription: "Search for available skills by name or description",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Search query to find skills"
+                        }
+                    },
+                    "required": ["query"]
+                }
+                """))
+        };
+
+        // Call OpenAI with tools
         var completion = await chatClient.CompleteChatAsync(messages, new ChatCompletionOptions
         {
             MaxOutputTokenCount = 800,
-            Temperature = 0.7f
+            Temperature = 0.7f,
+            Tools = tools
         });
 
+        // Check if AI wants to call functions
+        var toolCalls = completion.Value.ToolCalls;
+        if (toolCalls != null && toolCalls.Count > 0)
+        {
+            // Process function calls
+            var functionResults = new List<object>();
+
+            foreach (var toolCall in toolCalls)
+            {
+                if (toolCall is ChatToolCall functionCall)
+                {
+                    var functionName = functionCall.FunctionName;
+                    var functionArgs = functionCall.FunctionArguments;
+
+                    string result;
+                    try
+                    {
+                        result = await ExecuteFunctionAsync(userId, functionName, functionArgs);
+                    }
+                    catch (Exception ex)
+                    {
+                        result = $"Error: {ex.Message}";
+                    }
+
+                    functionResults.Add(new
+                    {
+                        toolCallId = functionCall.Id,
+                        function = functionName,
+                        result = result
+                    });
+
+                    // Add function call and result to conversation
+                    messages.Add(ChatMessage.CreateAssistantMessage(toolCalls));
+                    messages.Add(ChatMessage.CreateToolMessage(functionCall.Id, result));
+                }
+            }
+
+            // Call OpenAI again with function results
+            var secondCompletion = await chatClient.CompleteChatAsync(messages, new ChatCompletionOptions
+            {
+                MaxOutputTokenCount = 800,
+                Temperature = 0.7f
+            });
+
+            var finalMessage = secondCompletion.Value.Content[0].Text;
+
+            // Save assistant response
+            var assistantMsg = new DynamicEntity();
+            assistantMsg["userId"] = userId;
+            assistantMsg["role"] = "assistant";
+            assistantMsg["content"] = finalMessage;
+            if (request.CourseId.HasValue)
+            {
+                assistantMsg["courseId"] = request.CourseId.Value;
+            }
+
+            await _store.CreateAsync("ChatMessage", assistantMsg);
+
+            return Ok(new
+            {
+                Message = finalMessage,
+                RequiresAction = false,
+                ToolCalls = functionResults
+            });
+        }
+
+        // No function calls - return normal message
         var assistantMessage = completion.Value.Content[0].Text;
 
         // Save assistant response
-        var assistantMsg = new DynamicEntity();
-        assistantMsg["userId"] = userId;
-        assistantMsg["role"] = "assistant";
-        assistantMsg["content"] = assistantMessage;
+        var assistantMsgNormal = new DynamicEntity();
+        assistantMsgNormal["userId"] = userId;
+        assistantMsgNormal["role"] = "assistant";
+        assistantMsgNormal["content"] = assistantMessage;
         if (request.CourseId.HasValue)
         {
-            assistantMsg["courseId"] = request.CourseId.Value;
+            assistantMsgNormal["courseId"] = request.CourseId.Value;
         }
 
-        await _store.CreateAsync("ChatMessage", assistantMsg);
+        await _store.CreateAsync("ChatMessage", assistantMsgNormal);
 
         return Ok(new
         {
@@ -147,6 +255,79 @@ When users want to learn something, guide them through skills, topics, and cours
             .ToList();
 
         return Ok(filteredMessages);
+    }
+
+    /// <summary>
+    /// Execute AI function calls
+    /// </summary>
+    private async Task<string> ExecuteFunctionAsync(string userId, string functionName, BinaryData functionArgs)
+    {
+        var argsJson = functionArgs.ToString();
+
+        switch (functionName)
+        {
+            case "add_skill":
+                var addSkillArgs = JsonSerializer.Deserialize<JsonElement>(argsJson);
+                var skillId = addSkillArgs.GetProperty("skillId").GetString();
+
+                if (string.IsNullOrEmpty(skillId))
+                {
+                    return "Error: skillId is required";
+                }
+
+                // Check if user already has this skill
+                var allUserSkills = await _store.GetAllAsync("UserSkill", 1, 1000);
+                var existing = allUserSkills.FirstOrDefault(us =>
+                    us["userId"]?.ToString() == userId &&
+                    us["skillId"]?.ToString() == skillId);
+
+                if (existing != null)
+                {
+                    return "User already has this skill";
+                }
+
+                // Get skill details
+                var skill = await _store.GetByIdAsync("Skill", skillId);
+                if (skill == null)
+                {
+                    return "Skill not found";
+                }
+
+                // Create UserSkill
+                var userSkill = new DynamicEntity();
+                userSkill["userId"] = userId;
+                userSkill["skillId"] = skillId;
+                userSkill["status"] = "Learning";
+                userSkill["startedAt"] = DateTime.UtcNow.ToString("O");
+
+                await _store.CreateAsync("UserSkill", userSkill);
+
+                return $"Successfully added skill: {skill["name"]}";
+
+            case "search_skills":
+                var searchArgs = JsonSerializer.Deserialize<JsonElement>(argsJson);
+                var query = searchArgs.GetProperty("query").GetString()?.ToLower() ?? "";
+
+                var allSkills = await _store.GetAllAsync("Skill", 1, 100);
+                var matchingSkills = allSkills
+                    .Where(s =>
+                        s["name"]?.ToString()?.ToLower().Contains(query) == true ||
+                        s["description"]?.ToString()?.ToLower().Contains(query) == true)
+                    .Take(5)
+                    .Select(s => new
+                    {
+                        id = s.Id,
+                        name = s["name"]?.ToString(),
+                        description = s["description"]?.ToString(),
+                        difficulty = s["difficulty"]?.ToString()
+                    })
+                    .ToList();
+
+                return JsonSerializer.Serialize(matchingSkills);
+
+            default:
+                return $"Unknown function: {functionName}";
+        }
     }
 
     /// <summary>

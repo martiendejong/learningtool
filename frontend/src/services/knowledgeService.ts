@@ -112,30 +112,10 @@ export const knowledgeService = {
     return response.data.items;
   },
 
-  // User skills - filter by current user
+  // User skills - filter by current user (uses SkillsController with userId filtering)
   async getMySkills(): Promise<UserSkill[]> {
-    // Get current user from auth store or token
-    const [userSkillsResponse, skillsResponse] = await Promise.all([
-      api.get<PagedResponse<HazinaEntity<UserSkill>>>('/userskill', {
-        params: { pageSize: 1000 }
-      }),
-      api.get<PagedResponse<HazinaEntity<Skill>>>('/skill', {
-        params: { pageSize: 1000 }
-      })
-    ]);
-
-    // Flatten Hazina response structure
-    const userSkills = userSkillsResponse.data.items.map(flattenHazinaEntity);
-    const skills = skillsResponse.data.items.map(flattenHazinaEntity);
-
-    // Map skills by ID for easy lookup
-    const skillsMap = new Map(skills.map(s => [s.id, s]));
-
-    // Attach skill objects to userSkills
-    return userSkills.map(us => ({
-      ...us,
-      skill: skillsMap.get(us.skillId)
-    }));
+    const response = await api.get<UserSkill[]>('/skills/my');
+    return response.data;
   },
 
   async getSkillById(skillId: string): Promise<Skill> {
@@ -162,17 +142,16 @@ export const knowledgeService = {
   },
 
   async addSkillById(skillId: string): Promise<UserSkill> {
-    const response = await api.post<UserSkill>('/userskill', {
+    const response = await api.post<UserSkill>('/skills/my', {
       skillId,
-      status: 'Learning',
-      startedAt: new Date().toISOString()
+      status: 'Learning'
     });
     return response.data;
   },
 
-  async removeSkill(skillId: string): Promise<void> {
-    // Find and delete the UserSkill entry (soft delete)
-    await api.delete(`/userskill/${skillId}`);
+  async removeSkill(userSkillId: string): Promise<void> {
+    // Delete using SkillsController endpoint
+    await api.delete(`/skills/my/${userSkillId}`);
   },
 
   // Topics
