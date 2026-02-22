@@ -149,4 +149,23 @@ public class KnowledgeService : IKnowledgeService
 
         await _courseRepository.UpdateAsync(course);
     }
+
+    public async Task<List<Skill>> SearchLibraryAsync(string query)
+    {
+        // Search for skills that match the query
+        var skills = await _skillRepository.SearchAsync(query);
+
+        // For each skill, eagerly load topics and courses
+        foreach (var skill in skills)
+        {
+            var topics = await _topicRepository.GetBySkillIdAsync(skill.Id);
+            foreach (var topic in topics)
+            {
+                topic.Courses = await _courseRepository.GetByTopicIdAsync(topic.Id);
+            }
+            skill.Topics = topics;
+        }
+
+        return skills;
+    }
 }

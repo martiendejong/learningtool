@@ -10,6 +10,7 @@ public interface IKnowledgeService
     Task<Skill?> GetSkillByIdAsync(int id);
     Task<List<Skill>> SearchSkillsAsync(string query);
     Task<List<Skill>> GetAllSkillsAsync();
+    Task<List<Skill>> SearchLibraryAsync(string query); // New: search skills with topics and courses
 
     // Topic management
     Task<Topic> AddTopicAsync(int skillId, string name, string description);

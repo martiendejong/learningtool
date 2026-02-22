@@ -193,6 +193,39 @@ public class ChatController : ControllerBase
         {
             switch (toolCall.ToolName)
             {
+                case "search_library":
+                    {
+                        var query = toolCall.Arguments["query"].ToString()!;
+                        var results = await _knowledgeService.SearchLibraryAsync(query);
+
+                        if (results.Any())
+                        {
+                            var summary = string.Join("\n", results.Select(s =>
+                                $"Skill: {s.Name}\n" +
+                                $"  Topics: {string.Join(", ", s.Topics.Select(t => t.Name))}\n" +
+                                $"  Courses: {string.Join(", ", s.Topics.SelectMany(t => t.Courses).Select(c => c.Name))}"
+                            ));
+
+                            return new ToolResult
+                            {
+                                ToolCallId = toolCall.Id,
+                                Success = true,
+                                Result = $"Found {results.Count} matching skill(s) in library:\n{summary}",
+                                Data = results
+                            };
+                        }
+                        else
+                        {
+                            return new ToolResult
+                            {
+                                ToolCallId = toolCall.Id,
+                                Success = true,
+                                Result = "No matching skills found in library. You can create a new custom learning path.",
+                                Data = new List<object>()
+                            };
+                        }
+                    }
+
                 case "add_skill":
                     {
                         var name = toolCall.Arguments["name"].ToString()!;

@@ -57,30 +57,36 @@ public class ChatService : IChatService
 
 CRITICAL: Your ONLY job in this chat is to create learning paths (Skills → Topics → Courses). You do NOT teach courses here.
 
-When a user expresses interest in learning something, you MUST follow this sequence:
-1. Call add_skill to create the skill
-2. Call add_topic 2-3 times to create topics for that skill
-3. Call add_course AT LEAST ONCE for EACH topic you created (this is MANDATORY!)
-4. Present the created courses to the user
-5. Tell them to click the 'Start Course' button to begin learning
+When a user expresses interest in learning something, you MUST follow this NEW sequence:
+
+1. FIRST: Call search_library to find existing skills/courses that match what the user wants to learn
+2. IF FOUND in library:
+   - Call add_skill to assign the existing skill to the user (use the EXACT name from search results)
+   - The system will automatically include all related topics and courses
+   - Tell the user what courses are now available from the library
+3. IF NOT FOUND in library:
+   - Call add_skill to create a NEW skill
+   - Call add_topic 2-3 times to create topics
+   - Call add_course for EACH topic (MANDATORY!)
+4. Present the courses to the user
+5. Tell them to click 'Start Course' to begin learning
 
 Example workflow for 'I want to learn React':
-- add_skill(name='React', description='JavaScript library for building user interfaces')
-- add_topic(skillName='React', topicName='React Basics', description='Core concepts and components')
-- add_course(topicName='React Basics', courseName='Introduction to React', description='Learn React fundamentals including JSX, components, and props')
-- add_topic(skillName='React', topicName='React Hooks', description='Modern React with hooks')
-- add_course(topicName='React Hooks', courseName='Mastering React Hooks', description='Deep dive into useState, useEffect, and custom hooks')
+STEP 1: search_library(query='React')
+- IF FOUND: 'Great! I found React courses in our library. Let me add them to your learning path...'
+  → add_skill(name='Web Development') [exact name from library]
+- IF NOT FOUND: 'I'll create a custom learning path for React...'
+  → add_skill, add_topic, add_course (like before)
 
-Then say: 'I've created these courses for you! To start learning, navigate to the Skills page and click the Start Course button on the course you want to begin.'
-
-IMPORTANT:
+IMPORTANT RULES:
+- ALWAYS search the library FIRST before creating anything new
+- Use EXACT skill names from library search results (don't modify them)
 - DO NOT teach course content in this chat
 - DO NOT start courses for the user
-- DO NOT try to be a teacher here
 - Your role is ONLY to build the learning path structure
-- Users will access actual course teaching in a separate dedicated course chat
+- Users will access actual course teaching in dedicated course chats
 
-If user says 'start' or 'begin', remind them: 'Please use the Start Course button on the course page to begin your learning journey. Each course has its own dedicated learning environment.'";
+If user says 'start' or 'begin', remind them: 'Please use the Start Course button to begin learning.'";
         _maxTokens = int.Parse(configuration["OpenAI:MaxTokens"] ?? "500");
         _temperature = float.Parse(configuration["OpenAI:Temperature"] ?? "0.7", System.Globalization.CultureInfo.InvariantCulture);
     }
@@ -165,27 +171,44 @@ If user says 'start' or 'begin', remind them: 'Please use the Start Course butto
         var tools = new List<ChatTool>
         {
             ChatTool.CreateFunctionTool(
+                functionName: "search_library",
+                functionDescription: "Search the course library for existing skills, topics, and courses. ALWAYS call this FIRST before creating anything new. Returns matching skills with their topics and courses.",
+                functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "What the user wants to learn (e.g., 'React', 'Python', 'AI', 'design')"
+                        }
+                    },
+                    "required": ["query"],
+                    "additionalProperties": false
+                }
+                """)
+            ),
+            ChatTool.CreateFunctionTool(
                 functionName: "add_skill",
-                functionDescription: "Add a new skill to the user's learning path",
+                functionDescription: "Add a skill to the user's learning path. If the skill exists in the library, use the EXACT name. If creating new, provide name and description.",
                 functionParameters: BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
                         "name": {
                             "type": "string",
-                            "description": "The name of the skill to add"
+                            "description": "The EXACT name of the skill (from search_library results, or new skill name)"
                         },
                         "description": {
                             "type": "string",
-                            "description": "A brief description of what this skill involves"
+                            "description": "Description (only needed when creating NEW skills, optional for existing)"
                         },
                         "difficulty": {
                             "type": "string",
                             "enum": ["Beginner", "Intermediate", "Advanced"],
-                            "description": "The difficulty level of the skill"
+                            "description": "Difficulty level (optional, defaults to Beginner)"
                         }
                     },
-                    "required": ["name", "description"],
+                    "required": ["name"],
                     "additionalProperties": false
                 }
                 """)
