@@ -29,3 +29,4 @@ C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Application\ob
 C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Application\obj\Debug\net8.0\refint\LearningTool.Application.dll
 C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Application\obj\Debug\net8.0\LearningTool.Application.pdb
 C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Application\obj\Debug\net8.0\ref\LearningTool.Application.dll
+C:\Projects\learningtool\src\LearningTool.Application\obj\Debug\net8.0\LearningTool.Application.sourcelink.json

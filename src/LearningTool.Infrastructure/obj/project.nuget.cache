@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "lddfhJuiYp8=",
+  "dgSpecHash": "/+khq72TQto=",
   "success": true,
-  "projectFilePath": "C:\\Projects\\worker-agents\\agent-005\\learningtool\\src\\LearningTool.Infrastructure\\LearningTool.Infrastructure.csproj",
+  "projectFilePath": "C:\\Projects\\learningtool\\src\\LearningTool.Infrastructure\\LearningTool.Infrastructure.csproj",
   "expectedPackageFiles": [
     "E:\\nuget-cache\\.nuget\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\microsoft.aspnetcore.cryptography.internal\\8.0.0\\microsoft.aspnetcore.cryptography.internal.8.0.0.nupkg.sha512",

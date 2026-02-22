@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "IZYcHKzVtTs=",
+  "dgSpecHash": "W6/onzlNSVU=",
   "success": true,
-  "projectFilePath": "C:\\Projects\\worker-agents\\agent-005\\learningtool\\src\\LearningTool.Application\\LearningTool.Application.csproj",
+  "projectFilePath": "C:\\Projects\\learningtool\\src\\LearningTool.Application\\LearningTool.Application.csproj",
   "expectedPackageFiles": [
     "E:\\nuget-cache\\.nuget\\microsoft.extensions.configuration.abstractions\\10.0.3\\microsoft.extensions.configuration.abstractions.10.0.3.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",

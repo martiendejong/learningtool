@@ -145,15 +145,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    // Auto-apply migrations in development
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<LearningToolDbContext>();
-        db.Database.Migrate();
+    // Auto-apply migrations in development - DISABLED FOR PRODUCTION DEPLOY
+    // Migration already applied manually to production database
+    // using (var scope = app.Services.CreateScope())
+    // {
+    //     var db = scope.ServiceProvider.GetRequiredService<LearningToolDbContext>();
+    //     db.Database.Migrate();
 
-        // Seed initial data
-        await DataSeeder.SeedAsync(db);
-    }
+    //     // Seed initial data
+    //     await DataSeeder.SeedAsync(db);
+    // }
 }
 
 app.UseHttpsRedirection();

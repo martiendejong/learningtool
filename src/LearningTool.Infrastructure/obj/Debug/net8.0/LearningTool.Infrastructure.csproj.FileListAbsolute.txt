@@ -37,3 +37,4 @@ C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Infrastructure
 C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Infrastructure\obj\Debug\net8.0\LearningTool.Infrastructure.pdb
 C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Infrastructure\obj\Debug\net8.0\LearningTool.Infrastructure.genruntimeconfig.cache
 C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.Infrastructure\obj\Debug\net8.0\ref\LearningTool.Infrastructure.dll
+C:\Projects\learningtool\src\LearningTool.Infrastructure\obj\Debug\net8.0\LearningTool.Infrastructure.sourcelink.json

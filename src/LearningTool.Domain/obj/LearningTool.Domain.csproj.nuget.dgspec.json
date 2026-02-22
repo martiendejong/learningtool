@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Projects\\worker-agents\\agent-005\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj": {}
+    "C:\\Projects\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj": {}
   },
   "projects": {
-    "C:\\Projects\\worker-agents\\agent-005\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj": {
+    "C:\\Projects\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Projects\\worker-agents\\agent-005\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj",
+        "projectUniqueName": "C:\\Projects\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj",
         "projectName": "LearningTool.Domain",
-        "projectPath": "C:\\Projects\\worker-agents\\agent-005\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj",
+        "projectPath": "C:\\Projects\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj",
         "packagesPath": "E:\\nuget-cache\\.nuget",
-        "outputPath": "C:\\Projects\\worker-agents\\agent-005\\learningtool\\src\\LearningTool.Domain\\obj\\",
+        "outputPath": "C:\\Projects\\learningtool\\src\\LearningTool.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

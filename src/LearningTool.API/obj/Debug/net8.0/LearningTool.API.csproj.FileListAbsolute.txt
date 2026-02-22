@@ -307,3 +307,6 @@ C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.API\obj\Debug\
 C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.API\obj\Debug\net8.0\LearningTool.API.pdb
 C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.API\obj\Debug\net8.0\LearningTool.API.genruntimeconfig.cache
 C:\Projects\worker-agents\agent-005\learningtool\src\LearningTool.API\obj\Debug\net8.0\ref\LearningTool.API.dll
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\appsettings.example.json
+C:\Projects\learningtool\src\LearningTool.API\bin\Debug\net8.0\appsettings.Production.json
+C:\Projects\learningtool\src\LearningTool.API\obj\Debug\net8.0\LearningTool.API.sourcelink.json
