@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "g0hV12agHHc=",
+  "dgSpecHash": "UMbjuqKqKEo=",
   "success": true,
   "projectFilePath": "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
   "expectedPackageFiles": [
@@ -18,7 +18,7 @@
     "E:\\nuget-cache\\.nuget\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\mailkit\\4.13.0\\mailkit.4.13.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\mathnet.numerics\\5.0.0\\mathnet.numerics.5.0.0.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\microsoft.aspnetcore.authentication.google\\8.0.0\\microsoft.aspnetcore.authentication.google.8.0.0.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\microsoft.aspnetcore.authentication.google\\9.0.0\\microsoft.aspnetcore.authentication.google.9.0.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.0\\microsoft.aspnetcore.authentication.jwtbearer.8.0.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\microsoft.aspnetcore.cryptography.internal\\9.0.0\\microsoft.aspnetcore.cryptography.internal.9.0.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\microsoft.aspnetcore.cryptography.keyderivation\\9.0.0\\microsoft.aspnetcore.cryptography.keyderivation.9.0.0.nupkg.sha512",

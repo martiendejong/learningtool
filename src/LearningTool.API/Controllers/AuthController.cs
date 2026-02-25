@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -115,6 +116,105 @@ public class AuthController : ControllerBase
         });
     }
 
+    // GET /api/auth/google
+    [HttpGet("google")]
+    public IActionResult GoogleLogin([FromQuery] string? returnUrl = null)
+    {
+        var redirectUrl = Url.Action(nameof(GoogleCallback), "Auth", new { returnUrl });
+        var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl);
+        return Challenge(properties, "Google");
+    }
+
+    // GET /api/auth/google/callback
+    [HttpGet("google/callback")]
+    public async Task<IActionResult> GoogleCallback([FromQuery] string? returnUrl = null)
+    {
+        var info = await _signInManager.GetExternalLoginInfoAsync();
+        if (info == null)
+        {
+            var frontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5173";
+            return Redirect($"{frontendUrl}/login?error=google_login_failed");
+        }
+
+        // Try to sign in with existing Google account
+        var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
+
+        if (result.Succeeded)
+        {
+            var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            if (user != null)
+            {
+                user.LastLoginAt = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
+
+                var token = await GenerateJwtTokenAsync(user);
+                var frontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5173";
+                return Redirect($"{frontendUrl}/auth/callback?token={token}");
+            }
+        }
+
+        // New Google user - create account
+        var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+        var googleId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var name = info.Principal.FindFirstValue(ClaimTypes.Name);
+        var picture = info.Principal.FindFirstValue("picture");
+
+        if (string.IsNullOrEmpty(email))
+        {
+            var frontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5173";
+            return Redirect($"{frontendUrl}/login?error=no_email");
+        }
+
+        // Check if email already exists (linked to password account)
+        var existingUser = await _userManager.FindByEmailAsync(email);
+        if (existingUser != null)
+        {
+            // Link Google account to existing email account
+            var addLoginResult = await _userManager.AddLoginAsync(existingUser, info);
+            if (addLoginResult.Succeeded)
+            {
+                existingUser.GoogleId = googleId;
+                existingUser.ProfilePictureUrl ??= picture;
+                existingUser.FullName ??= name;
+                existingUser.LastLoginAt = DateTime.UtcNow;
+                await _userManager.UpdateAsync(existingUser);
+
+                var token = await GenerateJwtTokenAsync(existingUser);
+                var frontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5173";
+                return Redirect($"{frontendUrl}/auth/callback?token={token}");
+            }
+
+            var frontendUrlError = _configuration["Frontend:Url"] ?? "http://localhost:5173";
+            return Redirect($"{frontendUrlError}/login?error=link_failed");
+        }
+
+        // Create new user from Google account
+        var newUser = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true, // Google verified
+            GoogleId = googleId,
+            FullName = name,
+            ProfilePictureUrl = picture,
+            AccountType = "Individual" // Default for OAuth
+        };
+
+        var createResult = await _userManager.CreateAsync(newUser);
+        if (!createResult.Succeeded)
+        {
+            var frontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5173";
+            return Redirect($"{frontendUrl}/login?error=create_failed");
+        }
+
+        await _userManager.AddLoginAsync(newUser, info);
+        await _userManager.AddToRoleAsync(newUser, "Student");
+
+        var newToken = await GenerateJwtTokenAsync(newUser);
+        var newFrontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5173";
+        return Redirect($"{newFrontendUrl}/auth/callback?token={newToken}");
+    }
+
     private async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
     {
         var jwtKey = _configuration["Jwt:Key"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
@@ -160,7 +260,80 @@ public class AuthController : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    // POST /api/auth/accept-invite
+    [HttpPost("accept-invite")]
+    public async Task<IActionResult> AcceptInvite([FromBody] AcceptInviteRequest request)
+    {
+        // TODO: Validate invitation token via Hazina Dynamic API
+        // For now, mock validation
+        if (string.IsNullOrWhiteSpace(request.Token))
+        {
+            return BadRequest(new { message = "Invalid invitation token" });
+        }
+
+        // Check if user exists
+        var user = await _userManager.FindByEmailAsync(request.Email);
+
+        if (user == null)
+        {
+            // Create new user
+            user = new ApplicationUser
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                EmailConfirmed = true, // Email verified via invitation
+                FullName = request.FullName,
+                AccountType = "Organization",
+                // TODO: Get OrganizationId and Role from invitation token
+                // OrganizationId = invitation.OrganizationId,
+                // RoleInOrganization = invitation.Role
+            };
+
+            var result = await _userManager.CreateAsync(user, request.Password);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = "User creation failed", errors = result.Errors });
+            }
+
+            await _userManager.AddToRoleAsync(user, "Student");
+        }
+        else
+        {
+            // Update existing user to join organization
+            // TODO: Get OrganizationId and Role from invitation token
+            // user.OrganizationId = invitation.OrganizationId;
+            // user.RoleInOrganization = invitation.Role;
+            user.AccountType = "Organization";
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = "User update failed", errors = result.Errors });
+            }
+        }
+
+        // TODO: Mark invitation as accepted via Hazina Dynamic API
+
+        var jwtToken = await GenerateJwtTokenAsync(user);
+        return Ok(new
+        {
+            token = jwtToken,
+            user = new
+            {
+                id = user.Id,
+                email = user.Email,
+                userName = user.UserName,
+                fullName = user.FullName,
+                accountType = user.AccountType,
+                organizationId = user.OrganizationId,
+                roleInOrganization = user.RoleInOrganization,
+                profilePictureUrl = user.ProfilePictureUrl
+            }
+        });
+    }
 }
 
 public record RegisterRequest(string Email, string Password, string? FullName = null, string? AccountType = "Individual");
 public record LoginRequest(string Email, string Password);
+public record AcceptInviteRequest(string Token, string Email, string Password, string? FullName = null);

@@ -1,13 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService } from '../services/authService';
-import type { AuthResponse } from '../services/authService';
-
-interface User {
-  id: string;
-  email: string;
-  userName: string;
-}
+import type { AuthResponse, User } from '../services/authService';
 
 interface AuthState {
   user: User | null;
@@ -16,14 +10,16 @@ interface AuthState {
   isLoading: boolean;
 
   login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, fullName?: string, accountType?: 'Individual' | 'Organization') => Promise<boolean>;
   logout: () => void;
   setAuth: (data: AuthResponse) => void;
+  isOrgAdmin: () => boolean;
+  hasRole: (role: string) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
@@ -57,10 +53,10 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (email: string, password: string) => {
+      register: async (email: string, password: string, fullName?: string, accountType?: 'Individual' | 'Organization') => {
         set({ isLoading: true });
         try {
-          const data = await authService.register({ email, password });
+          const data = await authService.register({ email, password, fullName, accountType });
           localStorage.setItem('token', data.token);
           set({
             user: data.user,
@@ -83,6 +79,16 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           isAuthenticated: false,
         });
+      },
+
+      isOrgAdmin: (): boolean => {
+        const { user } = get();
+        return user?.accountType === 'Organization' && user?.roleInOrganization === 'Admin';
+      },
+
+      hasRole: (role: string): boolean => {
+        const { user } = get();
+        return user?.roleInOrganization === role;
       },
     }),
     {

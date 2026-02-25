@@ -55,6 +55,15 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
+})
+.AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
+    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+    options.CallbackPath = "/api/auth/google/callback";
+    options.Scope.Add("profile");
+    options.Scope.Add("email");
+    options.SaveTokens = true;
 });
 
 builder.Services.AddAuthorization();
