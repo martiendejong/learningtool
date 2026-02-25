@@ -222,6 +222,44 @@ public class OrganizationController : ControllerBase
 
         return Ok(new { message = "Member removed successfully" });
     }
+
+    // GET /api/organization/students/progress - Get all students' progress (Admin only)
+    [HttpGet("students/progress")]
+    public async Task<IActionResult> GetStudentsProgress()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        var currentUser = await _userManager.FindByIdAsync(userId);
+        if (currentUser == null || !currentUser.OrganizationId.HasValue)
+        {
+            return BadRequest(new { message = "User is not part of an organization" });
+        }
+
+        if (currentUser.RoleInOrganization != "Admin")
+        {
+            return Forbid(); // Only admins can view student progress
+        }
+
+        // Get all students in organization
+        var students = await _context.Users
+            .Where(u => u.OrganizationId == currentUser.OrganizationId && u.RoleInOrganization == "Student")
+            .Select(u => new
+            {
+                id = u.Id,
+                email = u.Email,
+                fullName = u.FullName,
+                profilePictureUrl = u.ProfilePictureUrl
+            })
+            .ToListAsync();
+
+        // TODO: Query UserSkill and UserCourse entities via Hazina Dynamic API
+        // For now, return student info only
+        return Ok(students);
+    }
 }
 
 public record InviteRequest(string Email, string? Role = "Student");

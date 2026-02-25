@@ -31,6 +31,16 @@ export default function Layout() {
                 />
               </Link>
               <div className="flex gap-2">
+                {/* Dashboard Link - Role based */}
+                {user?.roleInOrganization === 'Admin' ? (
+                  <Link to="/admin/organization" className={navLinkClass('/admin/organization')}>
+                    🏢 Dashboard
+                  </Link>
+                ) : (
+                  <Link to="/student/dashboard" className={navLinkClass('/student/dashboard')}>
+                    📊 Dashboard
+                  </Link>
+                )}
                 <Link to="/chat" className={navLinkClass('/chat')}>
                   💬 Learn
                 </Link>

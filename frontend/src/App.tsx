@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage';
 import AuthCallback from './pages/AuthCallback';
 import InvitePage from './pages/InvitePage';
 import OrgAdminDashboard from './pages/OrgAdminDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import ChatPage from './pages/ChatPage';
 import SkillsPage from './pages/SkillsPage';
 import SkillDetailPage from './pages/SkillDetailPage';
@@ -21,6 +22,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 }
 
+function RoleBasedRedirect() {
+  const { user } = useAuthStore();
+
+  // Redirect based on user role
+  if (user?.roleInOrganization === 'Admin') {
+    return <Navigate to="/admin/organization" replace />;
+  }
+
+  // Individual users and organization students both go to student dashboard
+  return <Navigate to="/student/dashboard" replace />;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -30,9 +43,10 @@ function App() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/invite/:token" element={<InvitePage />} />
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route index element={<Navigate to="/chat" />} />
-          <Route path="chat" element={<ChatPage />} />
+          <Route index element={<RoleBasedRedirect />} />
+          <Route path="student/dashboard" element={<StudentDashboard />} />
           <Route path="admin/organization" element={<OrgAdminDashboard />} />
+          <Route path="chat" element={<ChatPage />} />
           <Route path="skills" element={<SkillsPage />} />
           <Route path="skill/:id" element={<SkillDetailPage />} />
           <Route path="topic/:id" element={<TopicDetailPage />} />
