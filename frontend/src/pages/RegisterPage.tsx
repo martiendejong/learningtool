@@ -6,6 +6,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [accountType, setAccountType] = useState<'Individual' | 'Organization'>('Individual');
   const [error, setError] = useState('');
   const { register, isLoading } = useAuthStore();
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ export default function RegisterPage() {
       return;
     }
 
-    const success = await register(email, password);
+    const success = await register(email, password, fullName, accountType);
     if (success) {
       navigate('/chat');
     } else {
@@ -49,6 +51,20 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="John Doe"
+            />
+          </div>
+
+          <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
@@ -61,6 +77,21 @@ export default function RegisterPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="you@example.com"
             />
+          </div>
+
+          <div>
+            <label htmlFor="accountType" className="block text-sm font-medium text-gray-700 mb-1">
+              Account Type
+            </label>
+            <select
+              id="accountType"
+              value={accountType}
+              onChange={(e) => setAccountType(e.target.value as 'Individual' | 'Organization')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="Individual">Individual (Student)</option>
+              <option value="Organization">Organization (Company/School)</option>
+            </select>
           </div>
 
           <div>
