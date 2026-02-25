@@ -1,23 +1,24 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Hazina.API.Generic.Dynamic;
+using LearningTool.API.Data;
+using LearningTool.API.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Identity Database (separate from Hazina entities)
+// Identity Database (PostgreSQL - separate from Hazina entities)
 var identityConnectionString = builder.Configuration.GetConnectionString("IdentityConnection")
-    ?? "Data Source=identity.db";
+    ?? "Host=localhost;Database=learningtool_identity;Username=postgres;Password=postgres";
 
-builder.Services.AddDbContext<IdentityDbContext>(options =>
-    options.UseSqlite(identityConnectionString));
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(identityConnectionString));
 
-// Identity configuration
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+// Identity configuration with ApplicationUser (extended user model)
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     // Password settings
     options.Password.RequireDigit = true;
@@ -29,7 +30,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     // User settings
     options.User.RequireUniqueEmail = true;
 })
-.AddEntityFrameworkStores<IdentityDbContext>()
+.AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
 // Authentication configuration

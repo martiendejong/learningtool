@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "zocD3jwqnP4=",
+  "dgSpecHash": "g0hV12agHHc=",
   "success": true,
-  "projectFilePath": "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
+  "projectFilePath": "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
   "expectedPackageFiles": [
     "E:\\nuget-cache\\.nuget\\azure.ai.openai\\2.1.0-beta.2\\azure.ai.openai.2.1.0-beta.2.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\azure.core\\1.44.1\\azure.core.1.44.1.nupkg.sha512",
@@ -83,7 +83,8 @@
     "E:\\nuget-cache\\.nuget\\mimemapping\\3.0.1\\mimemapping.3.0.1.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\mono.texttemplating\\3.0.0\\mono.texttemplating.3.0.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\npgsql\\8.0.3\\npgsql.8.0.3.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\npgsql\\9.0.2\\npgsql.9.0.2.nupkg.sha512",
+    "E:\\nuget-cache\\.nuget\\npgsql.entityframeworkcore.postgresql\\9.0.2\\npgsql.entityframeworkcore.postgresql.9.0.2.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\openai\\2.6.0\\openai.2.6.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\pgvector\\0.2.0\\pgvector.0.2.0.nupkg.sha512",
     "E:\\nuget-cache\\.nuget\\polly\\8.5.0\\polly.8.5.0.nupkg.sha512",
@@ -156,9 +157,9 @@
       "code": "NU1608",
       "level": "Warning",
       "message": "Detected package version outside of dependency constraint: Microsoft.SemanticKernel.Connectors.OpenAI 1.31.0 requires OpenAI (= 2.1.0-beta.2) but version OpenAI 2.6.0 was resolved.",
-      "projectPath": "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
+      "projectPath": "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
+      "filePath": "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
       "libraryId": "OpenAI",
       "targetGraphs": [
         "net9.0"

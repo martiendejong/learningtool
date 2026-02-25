@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using LearningTool.API.Models;
 
 namespace LearningTool.API.Controllers;
 
@@ -11,13 +12,13 @@ namespace LearningTool.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
 
     public AuthController(
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager,
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
         IConfiguration configuration)
     {
         _userManager = userManager;
@@ -39,10 +40,13 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Email already registered" });
         }
 
-        var user = new IdentityUser
+        var user = new ApplicationUser
         {
             UserName = request.Email,
-            Email = request.Email
+            Email = request.Email,
+            FullName = request.FullName,
+            AccountType = request.AccountType ?? "Individual",
+            EmailConfirmed = false
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
@@ -51,7 +55,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Registration failed", errors = result.Errors });
         }
 
-        var token = GenerateJwtToken(user);
+        var token = await GenerateJwtTokenAsync(user);
         return Ok(new
         {
             token,
@@ -59,7 +63,12 @@ public class AuthController : ControllerBase
             {
                 id = user.Id,
                 email = user.Email,
-                userName = user.UserName
+                userName = user.UserName,
+                fullName = user.FullName,
+                accountType = user.AccountType,
+                organizationId = user.OrganizationId,
+                roleInOrganization = user.RoleInOrganization,
+                profilePictureUrl = user.ProfilePictureUrl
             }
         });
     }
@@ -84,7 +93,11 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid credentials" });
         }
 
-        var token = GenerateJwtToken(user);
+        // Update last login timestamp
+        user.LastLoginAt = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+
+        var token = await GenerateJwtTokenAsync(user);
         return Ok(new
         {
             token,
@@ -92,24 +105,47 @@ public class AuthController : ControllerBase
             {
                 id = user.Id,
                 email = user.Email,
-                userName = user.UserName
+                userName = user.UserName,
+                fullName = user.FullName,
+                accountType = user.AccountType,
+                organizationId = user.OrganizationId,
+                roleInOrganization = user.RoleInOrganization,
+                profilePictureUrl = user.ProfilePictureUrl
             }
         });
     }
 
-    private string GenerateJwtToken(IdentityUser user)
+    private async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
     {
         var jwtKey = _configuration["Jwt:Key"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "LearningTool";
         var jwtAudience = _configuration["Jwt:Audience"] ?? "LearningToolUsers";
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Name, user.UserName ?? user.Email),
+            new Claim(ClaimTypes.Name, user.UserName ?? user.Email ?? ""),
             new Claim(ClaimTypes.Email, user.Email ?? ""),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("account_type", user.AccountType ?? "Individual")
         };
+
+        // Add organization claims if user belongs to an organization
+        if (user.OrganizationId.HasValue)
+        {
+            claims.Add(new Claim("organization_id", user.OrganizationId.Value.ToString()));
+            if (!string.IsNullOrEmpty(user.RoleInOrganization))
+            {
+                claims.Add(new Claim("organization_role", user.RoleInOrganization));
+            }
+        }
+
+        // Add user roles
+        var roles = await _userManager.GetRolesAsync(user);
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -126,5 +162,5 @@ public class AuthController : ControllerBase
     }
 }
 
-public record RegisterRequest(string Email, string Password);
+public record RegisterRequest(string Email, string Password, string? FullName = null, string? AccountType = "Individual");
 public record LoginRequest(string Email, string Password);

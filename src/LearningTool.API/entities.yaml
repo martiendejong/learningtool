@@ -191,3 +191,110 @@ entities:
     access:
       requiresAuth: true
       ownerOnly: true  # Users only see their own chats
+
+  - name: Organization
+    description: Organization account (company, school, team)
+    fields:
+      - name: name
+        type: string
+        required: true
+        maxLength: 200
+        searchable: true
+      - name: slug
+        type: string
+        required: true
+        maxLength: 100
+        indexed: true
+        description: 'URL-friendly unique identifier (e.g., acme-corp)'
+      - name: logoUrl
+        type: string
+        maxLength: 500
+        description: 'Organization logo URL'
+      - name: description
+        type: text
+        searchable: true
+      - name: maxStudents
+        type: int
+        defaultValue: "100"
+        description: 'Maximum number of students allowed'
+      - name: subscriptionTier
+        type: enum
+        description: "Free, Basic, Pro, Enterprise"
+        defaultValue: "Free"
+      - name: subscriptionStatus
+        type: enum
+        description: "Active, Suspended, Cancelled"
+        defaultValue: "Active"
+      - name: billingEmail
+        type: string
+        maxLength: 200
+      - name: createdBy
+        type: string
+        required: true
+        indexed: true
+        description: 'UserId of organization creator'
+    features:
+      crud: true
+      search: true
+      softDelete: true
+      pagination: true
+      filtering: true
+    access:
+      requiresAuth: true
+      ownerOnly: true  # Only org admins can modify
+
+  - name: OrganizationInvitation
+    description: Invitation tokens for joining organizations
+    fields:
+      - name: organizationId
+        type: reference
+        referencesEntity: Organization
+        required: true
+        indexed: true
+      - name: email
+        type: string
+        required: true
+        maxLength: 200
+        indexed: true
+        description: 'Email address of invitee'
+      - name: token
+        type: string
+        required: true
+        maxLength: 100
+        indexed: true
+        description: 'Secure random token (32 bytes base64)'
+      - name: role
+        type: enum
+        description: "Admin, Student"
+        defaultValue: "Student"
+        required: true
+      - name: invitedBy
+        type: string
+        required: true
+        indexed: true
+        description: 'UserId of person who sent invitation'
+      - name: expiresAt
+        type: dateTime
+        required: true
+        indexed: true
+        description: 'Expiration timestamp (7 days from creation)'
+      - name: status
+        type: enum
+        description: "Pending, Accepted, Expired, Revoked"
+        defaultValue: "Pending"
+        required: true
+        indexed: true
+      - name: acceptedAt
+        type: dateTime
+        description: 'Timestamp when invitation was accepted'
+      - name: acceptedBy
+        type: string
+        description: 'UserId of person who accepted'
+    features:
+      crud: true
+      softDelete: true
+      filtering: true
+      pagination: true
+    access:
+      requiresAuth: true
+      createRoles: ["Admin", "OrgAdmin"]  # Only admins can create invitations

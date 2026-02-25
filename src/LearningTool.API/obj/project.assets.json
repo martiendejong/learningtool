@@ -1532,10 +1532,10 @@
           }
         }
       },
-      "Npgsql/8.0.3": {
+      "Npgsql/9.0.2": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.0"
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.2"
         },
         "compile": {
           "lib/net8.0/Npgsql.dll": {
@@ -1544,6 +1544,24 @@
         },
         "runtime": {
           "lib/net8.0/Npgsql.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Npgsql.EntityFrameworkCore.PostgreSQL/9.0.2": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "[9.0.0, 10.0.0)",
+          "Microsoft.EntityFrameworkCore.Relational": "[9.0.0, 10.0.0)",
+          "Npgsql": "9.0.2"
+        },
+        "compile": {
+          "lib/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll": {
             "related": ".xml"
           }
         }
@@ -5567,26 +5585,35 @@
         "packageIcon.png"
       ]
     },
-    "Npgsql/8.0.3": {
-      "sha512": "6WEmzsQJCZAlUG1pThKg/RmeF6V+I0DmBBBE/8YzpRtEzhyZzKcK7ulMANDm5CkxrALBEC8H+5plxHWtIL7xnA==",
+    "Npgsql/9.0.2": {
+      "sha512": "hCbO8box7i/XXiTFqCJ3GoowyLqx3JXxyrbOJ6om7dr+eAknvBNhhUHeJVGAQo44sySZTfdVffp4BrtPeLZOAA==",
       "type": "package",
-      "path": "npgsql/8.0.3",
+      "path": "npgsql/9.0.2",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
         "lib/net6.0/Npgsql.dll",
         "lib/net6.0/Npgsql.xml",
-        "lib/net7.0/Npgsql.dll",
-        "lib/net7.0/Npgsql.xml",
         "lib/net8.0/Npgsql.dll",
         "lib/net8.0/Npgsql.xml",
-        "lib/netstandard2.0/Npgsql.dll",
-        "lib/netstandard2.0/Npgsql.xml",
-        "lib/netstandard2.1/Npgsql.dll",
-        "lib/netstandard2.1/Npgsql.xml",
-        "npgsql.8.0.3.nupkg.sha512",
+        "npgsql.9.0.2.nupkg.sha512",
         "npgsql.nuspec",
+        "postgresql.png"
+      ]
+    },
+    "Npgsql.EntityFrameworkCore.PostgreSQL/9.0.2": {
+      "sha512": "cYdOGplIvr9KgsG8nJ8xnzBTImeircbgetlzS1OmepS5dAQW6PuGpVrLOKBNEwEvGYZPsV8037X5vZ/Dmpwz7Q==",
+      "type": "package",
+      "path": "npgsql.entityframeworkcore.postgresql/9.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll",
+        "lib/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.xml",
+        "npgsql.entityframeworkcore.postgresql.9.0.2.nupkg.sha512",
+        "npgsql.entityframeworkcore.postgresql.nuspec",
         "postgresql.png"
       ]
     },
@@ -6888,88 +6915,88 @@
     },
     "Hazina.AgentFactory/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/Agents/Hazina.AgentFactory/Hazina.AgentFactory.csproj",
-      "msbuildProject": "../../../hazina/src/Core/Agents/Hazina.AgentFactory/Hazina.AgentFactory.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\Agents\\Hazina.AgentFactory\\Hazina.AgentFactory.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\Agents\\Hazina.AgentFactory\\Hazina.AgentFactory.csproj"
     },
     "Hazina.AI.Providers/1.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/AI/Hazina.AI.Providers/Hazina.AI.Providers.csproj",
-      "msbuildProject": "../../../hazina/src/Core/AI/Hazina.AI.Providers/Hazina.AI.Providers.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\AI\\Hazina.AI.Providers\\Hazina.AI.Providers.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\AI\\Hazina.AI.Providers\\Hazina.AI.Providers.csproj"
     },
     "Hazina.API.Generic/1.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/API/Hazina.API.Generic/Hazina.API.Generic.csproj",
-      "msbuildProject": "../../../hazina/src/Core/API/Hazina.API.Generic/Hazina.API.Generic.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\API\\Hazina.API.Generic\\Hazina.API.Generic.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\API\\Hazina.API.Generic\\Hazina.API.Generic.csproj"
     },
     "Hazina.Generator/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/Agents/Hazina.Generator/Hazina.Generator.csproj",
-      "msbuildProject": "../../../hazina/src/Core/Agents/Hazina.Generator/Hazina.Generator.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\Agents\\Hazina.Generator\\Hazina.Generator.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\Agents\\Hazina.Generator\\Hazina.Generator.csproj"
     },
     "Hazina.LLMClientTools/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/LLMs/Hazina.LLMClientTools/Hazina.LLMClientTools.csproj",
-      "msbuildProject": "../../../hazina/src/Core/LLMs/Hazina.LLMClientTools/Hazina.LLMClientTools.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\LLMs\\Hazina.LLMClientTools\\Hazina.LLMClientTools.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\LLMs\\Hazina.LLMClientTools\\Hazina.LLMClientTools.csproj"
     },
     "Hazina.LLMs.Classes/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/LLMs/Hazina.LLMs.Classes/Hazina.LLMs.Classes.csproj",
-      "msbuildProject": "../../../hazina/src/Core/LLMs/Hazina.LLMs.Classes/Hazina.LLMs.Classes.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\LLMs\\Hazina.LLMs.Classes\\Hazina.LLMs.Classes.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\LLMs\\Hazina.LLMs.Classes\\Hazina.LLMs.Classes.csproj"
     },
     "Hazina.LLMs.Client/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/LLMs/Hazina.LLMs.Client/Hazina.LLMs.Client.csproj",
-      "msbuildProject": "../../../hazina/src/Core/LLMs/Hazina.LLMs.Client/Hazina.LLMs.Client.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\LLMs\\Hazina.LLMs.Client\\Hazina.LLMs.Client.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\LLMs\\Hazina.LLMs.Client\\Hazina.LLMs.Client.csproj"
     },
     "Hazina.LLMs.Helpers/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/LLMs/Hazina.LLMs.Helpers/Hazina.LLMs.Helpers.csproj",
-      "msbuildProject": "../../../hazina/src/Core/LLMs/Hazina.LLMs.Helpers/Hazina.LLMs.Helpers.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\LLMs\\Hazina.LLMs.Helpers\\Hazina.LLMs.Helpers.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\LLMs\\Hazina.LLMs.Helpers\\Hazina.LLMs.Helpers.csproj"
     },
     "Hazina.LLMs.OpenAI/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/LLMs.Providers/Hazina.LLMs.OpenAI/Hazina.LLMs.OpenAI.csproj",
-      "msbuildProject": "../../../hazina/src/Core/LLMs.Providers/Hazina.LLMs.OpenAI/Hazina.LLMs.OpenAI.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\LLMs.Providers\\Hazina.LLMs.OpenAI\\Hazina.LLMs.OpenAI.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\LLMs.Providers\\Hazina.LLMs.OpenAI\\Hazina.LLMs.OpenAI.csproj"
     },
     "Hazina.LLMs.SemanticKernel/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/LLMs.Providers/Hazina.LLMs.SemanticKernel/Hazina.LLMs.SemanticKernel.csproj",
-      "msbuildProject": "../../../hazina/src/Core/LLMs.Providers/Hazina.LLMs.SemanticKernel/Hazina.LLMs.SemanticKernel.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\LLMs.Providers\\Hazina.LLMs.SemanticKernel\\Hazina.LLMs.SemanticKernel.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\LLMs.Providers\\Hazina.LLMs.SemanticKernel\\Hazina.LLMs.SemanticKernel.csproj"
     },
     "Hazina.Store.DocumentStore/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/Storage/Hazina.Store.DocumentStore/Hazina.Store.DocumentStore.csproj",
-      "msbuildProject": "../../../hazina/src/Core/Storage/Hazina.Store.DocumentStore/Hazina.Store.DocumentStore.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\Storage\\Hazina.Store.DocumentStore\\Hazina.Store.DocumentStore.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\Storage\\Hazina.Store.DocumentStore\\Hazina.Store.DocumentStore.csproj"
     },
     "Hazina.Store.EmbeddingStore/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/Storage/Hazina.Store.EmbeddingStore/Hazina.Store.EmbeddingStore.csproj",
-      "msbuildProject": "../../../hazina/src/Core/Storage/Hazina.Store.EmbeddingStore/Hazina.Store.EmbeddingStore.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\Storage\\Hazina.Store.EmbeddingStore\\Hazina.Store.EmbeddingStore.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\Storage\\Hazina.Store.EmbeddingStore\\Hazina.Store.EmbeddingStore.csproj"
     },
     "Hazina.Store.Sqlite/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Core/Storage/Hazina.Store.Sqlite/Hazina.Store.Sqlite.csproj",
-      "msbuildProject": "../../../hazina/src/Core/Storage/Hazina.Store.Sqlite/Hazina.Store.Sqlite.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Core\\Storage\\Hazina.Store.Sqlite\\Hazina.Store.Sqlite.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Core\\Storage\\Hazina.Store.Sqlite\\Hazina.Store.Sqlite.csproj"
     },
     "Hazina.Tools.Common.Models/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Tools/Common/Hazina.Tools.Common.Models/Hazina.Tools.Common.Models.csproj",
-      "msbuildProject": "../../../hazina/src/Tools/Common/Hazina.Tools.Common.Models/Hazina.Tools.Common.Models.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Tools\\Common\\Hazina.Tools.Common.Models\\Hazina.Tools.Common.Models.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Tools\\Common\\Hazina.Tools.Common.Models\\Hazina.Tools.Common.Models.csproj"
     },
     "Hazina.Tools.Core/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Tools/Foundation/Hazina.Tools.Core/Hazina.Tools.Core.csproj",
-      "msbuildProject": "../../../hazina/src/Tools/Foundation/Hazina.Tools.Core/Hazina.Tools.Core.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Tools\\Foundation\\Hazina.Tools.Core\\Hazina.Tools.Core.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Tools\\Foundation\\Hazina.Tools.Core\\Hazina.Tools.Core.csproj"
     },
     "Hazina.Tools.Data/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Tools/Foundation/Hazina.Tools.Data/Hazina.Tools.Data.csproj",
-      "msbuildProject": "../../../hazina/src/Tools/Foundation/Hazina.Tools.Data/Hazina.Tools.Data.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Tools\\Foundation\\Hazina.Tools.Data\\Hazina.Tools.Data.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Tools\\Foundation\\Hazina.Tools.Data\\Hazina.Tools.Data.csproj"
     },
     "Hazina.Tools.Models/2.0.0": {
       "type": "project",
-      "path": "../../../hazina/src/Tools/Foundation/Hazina.Tools.Models/Hazina.Tools.Models.csproj",
-      "msbuildProject": "../../../hazina/src/Tools/Foundation/Hazina.Tools.Models/Hazina.Tools.Models.csproj"
+      "path": "C:\\Projects\\hazina\\src\\Tools\\Foundation\\Hazina.Tools.Models\\Hazina.Tools.Models.csproj",
+      "msbuildProject": "C:\\Projects\\hazina\\src\\Tools\\Foundation\\Hazina.Tools.Models\\Hazina.Tools.Models.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -6981,6 +7008,7 @@
       "Microsoft.AspNetCore.OpenApi >= 8.0.22",
       "Microsoft.EntityFrameworkCore.Sqlite >= 9.0.0",
       "Microsoft.EntityFrameworkCore.Tools >= 9.0.0",
+      "Npgsql.EntityFrameworkCore.PostgreSQL >= 9.0.2",
       "Swashbuckle.AspNetCore >= 6.6.2"
     ]
   },
@@ -6991,17 +7019,17 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
+      "projectUniqueName": "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
       "projectName": "LearningTool.API",
-      "projectPath": "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
+      "projectPath": "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
       "packagesPath": "E:\\nuget-cache\\.nuget",
-      "outputPath": "C:\\Projects\\learningtool\\src\\LearningTool.API\\obj\\",
+      "outputPath": "E:\\projects\\learningtool\\src\\LearningTool.API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Projects\\learningtool\\NuGet.Config",
+        "E:\\projects\\learningtool\\NuGet.Config",
         "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
@@ -7064,6 +7092,10 @@
             "suppressParent": "All",
             "target": "Package",
             "version": "[9.0.0, )"
+          },
+          "Npgsql.EntityFrameworkCore.PostgreSQL": {
+            "target": "Package",
+            "version": "[9.0.2, )"
           },
           "Swashbuckle.AspNetCore": {
             "target": "Package",
