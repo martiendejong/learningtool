@@ -260,7 +260,80 @@ public class AuthController : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    // POST /api/auth/accept-invite
+    [HttpPost("accept-invite")]
+    public async Task<IActionResult> AcceptInvite([FromBody] AcceptInviteRequest request)
+    {
+        // TODO: Validate invitation token via Hazina Dynamic API
+        // For now, mock validation
+        if (string.IsNullOrWhiteSpace(request.Token))
+        {
+            return BadRequest(new { message = "Invalid invitation token" });
+        }
+
+        // Check if user exists
+        var user = await _userManager.FindByEmailAsync(request.Email);
+
+        if (user == null)
+        {
+            // Create new user
+            user = new ApplicationUser
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                EmailConfirmed = true, // Email verified via invitation
+                FullName = request.FullName,
+                AccountType = "Organization",
+                // TODO: Get OrganizationId and Role from invitation token
+                // OrganizationId = invitation.OrganizationId,
+                // RoleInOrganization = invitation.Role
+            };
+
+            var result = await _userManager.CreateAsync(user, request.Password);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = "User creation failed", errors = result.Errors });
+            }
+
+            await _userManager.AddToRoleAsync(user, "Student");
+        }
+        else
+        {
+            // Update existing user to join organization
+            // TODO: Get OrganizationId and Role from invitation token
+            // user.OrganizationId = invitation.OrganizationId;
+            // user.RoleInOrganization = invitation.Role;
+            user.AccountType = "Organization";
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = "User update failed", errors = result.Errors });
+            }
+        }
+
+        // TODO: Mark invitation as accepted via Hazina Dynamic API
+
+        var jwtToken = await GenerateJwtTokenAsync(user);
+        return Ok(new
+        {
+            token = jwtToken,
+            user = new
+            {
+                id = user.Id,
+                email = user.Email,
+                userName = user.UserName,
+                fullName = user.FullName,
+                accountType = user.AccountType,
+                organizationId = user.OrganizationId,
+                roleInOrganization = user.RoleInOrganization,
+                profilePictureUrl = user.ProfilePictureUrl
+            }
+        });
+    }
 }
 
 public record RegisterRequest(string Email, string Password, string? FullName = null, string? AccountType = "Individual");
 public record LoginRequest(string Email, string Password);
+public record AcceptInviteRequest(string Token, string Email, string Password, string? FullName = null);

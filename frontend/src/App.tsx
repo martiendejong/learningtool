@@ -3,6 +3,8 @@ import { useAuthStore } from './stores/authStore';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AuthCallback from './pages/AuthCallback';
+import InvitePage from './pages/InvitePage';
+import OrgAdminDashboard from './pages/OrgAdminDashboard';
 import ChatPage from './pages/ChatPage';
 import SkillsPage from './pages/SkillsPage';
 import SkillDetailPage from './pages/SkillDetailPage';
@@ -26,9 +28,11 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/invite/:token" element={<InvitePage />} />
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/chat" />} />
           <Route path="chat" element={<ChatPage />} />
+          <Route path="admin/organization" element={<OrgAdminDashboard />} />
           <Route path="skills" element={<SkillsPage />} />
           <Route path="skill/:id" element={<SkillDetailPage />} />
           <Route path="topic/:id" element={<TopicDetailPage />} />
