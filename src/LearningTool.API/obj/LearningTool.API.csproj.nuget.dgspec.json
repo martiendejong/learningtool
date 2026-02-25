@@ -1,7 +1,7 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj": {}
+    "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj": {}
   },
   "projects": {
     "C:\\Projects\\hazina\\src\\Core\\Agents\\Hazina.AgentFactory\\Hazina.AgentFactory.csproj": {
@@ -1661,20 +1661,20 @@
         }
       }
     },
-    "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj": {
+    "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
+        "projectUniqueName": "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
         "projectName": "LearningTool.API",
-        "projectPath": "C:\\Projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
+        "projectPath": "E:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
         "packagesPath": "E:\\nuget-cache\\.nuget",
-        "outputPath": "C:\\Projects\\learningtool\\src\\LearningTool.API\\obj\\",
+        "outputPath": "E:\\projects\\learningtool\\src\\LearningTool.API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Projects\\learningtool\\NuGet.Config",
+          "E:\\projects\\learningtool\\NuGet.Config",
           "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
@@ -1714,7 +1714,7 @@
           "dependencies": {
             "Microsoft.AspNetCore.Authentication.Google": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.0, )"
             },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
@@ -1737,6 +1737,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[9.0.0, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[9.0.2, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
