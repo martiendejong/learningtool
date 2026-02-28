@@ -139,6 +139,16 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// Seed roles and default admin user
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+    await LearningTool.API.RoleSeeder.SeedRolesAndAdmin(roleManager, userManager, configuration);
+}
+
 // Configure HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
