@@ -2,16 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import MessageContent from '../components/MessageContent';
-import api from '../services/api';
+import { knowledgeService } from '../services/knowledgeService';
+import { chatService, type ChatMessage, type ChatResponse } from '../services/chatService';
 import type { Course } from '../services/knowledgeService';
-import type { ChatMessage } from '../services/chatService';
-
-interface ChatResponse {
-  message: string;
-  toolCalls?: any[];
-  requiresAction: boolean;
-  toolResults?: any[];
-}
 
 export default function CourseChatPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,12 +32,12 @@ export default function CourseChatPage() {
       setInitialLoading(true);
 
       // Load course details
-      const courseResponse = await api.get<Course>(`/courses/${id}`);
-      setCourse(courseResponse.data);
+      const courseData = await knowledgeService.getCourse(Number(id));
+      setCourse(courseData);
 
       // Load course chat history
-      const historyResponse = await api.get<ChatMessage[]>(`/chat/course/${id}/history`);
-      setMessages(historyResponse.data);
+      const history = await chatService.getCourseHistory(Number(id));
+      setMessages(history);
     } catch (err) {
       console.error('Failed to load course data:', err);
     } finally {
@@ -72,25 +65,23 @@ export default function CourseChatPage() {
     setMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const response = await api.post<ChatResponse>(`/chat/course/${id}/message`, {
-        message: message,
-      });
+      const response = await chatService.sendCourseMessage(Number(id), message);
 
       // Add assistant message
       const assistantMsg: ChatMessage = {
         id: Date.now() + 1,
         userId: user?.id || '',
         role: 'assistant',
-        content: response.data.message,
-        toolCalls: response.data.toolCalls ? JSON.stringify(response.data.toolCalls) : undefined,
+        content: response.message,
+        toolCalls: response.toolCalls ? JSON.stringify(response.toolCalls) : undefined,
         timestamp: new Date().toISOString(),
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
 
       // If there are tool results, show them
-      if (response.data.toolResults && response.data.toolResults.length > 0) {
-        const successResults = response.data.toolResults.filter((r: any) => r.success);
+      if (response.toolResults && response.toolResults.length > 0) {
+        const successResults = response.toolResults.filter((r: any) => r.success);
         if (successResults.length > 0) {
           const toolResultsMsg: ChatMessage = {
             id: Date.now() + 2,
