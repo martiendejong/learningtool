@@ -13,6 +13,9 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
+    // Organizations
+    public DbSet<Organization> Organizations { get; set; } = null!;
+
     // Catalog tables (shared across users)
     public DbSet<Skill> Skills { get; set; } = null!;
     public DbSet<Topic> Topics { get; set; } = null!;
@@ -31,12 +34,33 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
         base.OnModelCreating(modelBuilder);
 
         // Soft delete global query filters
+        modelBuilder.Entity<Organization>().HasQueryFilter(o => !o.IsDeleted);
         modelBuilder.Entity<Skill>().HasQueryFilter(s => !s.IsDeleted);
         modelBuilder.Entity<Topic>().HasQueryFilter(t => !t.IsDeleted);
         modelBuilder.Entity<Course>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<UserSkill>().HasQueryFilter(us => !us.IsDeleted);
         modelBuilder.Entity<UserTopic>().HasQueryFilter(ut => !ut.IsDeleted);
         modelBuilder.Entity<UserCourse>().HasQueryFilter(uc => !uc.IsDeleted);
+
+        // Organization configuration
+        modelBuilder.Entity<Organization>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).IsRequired();
+        });
+
+        // ApplicationUser configuration
+        modelBuilder.Entity<ApplicationUser>(entity =>
+        {
+            entity.HasOne(e => e.Organization)
+                .WithMany()
+                .HasForeignKey(e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);  // Don't cascade delete users when org is deleted
+        });
 
         // Skill configuration
         modelBuilder.Entity<Skill>(entity =>
