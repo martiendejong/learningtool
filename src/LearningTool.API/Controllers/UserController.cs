@@ -39,6 +39,7 @@ public class UserController : ControllerBase
                 userName = user.UserName,
                 emailConfirmed = user.EmailConfirmed,
                 role = roles.FirstOrDefault() ?? "STUDENT",
+                organizationId = user.OrganizationId,
                 createdAt = user.CreatedAt
             });
         }
@@ -66,7 +67,8 @@ public class UserController : ControllerBase
         {
             UserName = request.Email,
             Email = request.Email,
-            EmailConfirmed = true // Admin-created users are pre-confirmed
+            EmailConfirmed = true, // Admin-created users are pre-confirmed
+            OrganizationId = request.OrganizationId
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
@@ -87,7 +89,8 @@ public class UserController : ControllerBase
             id = user.Id,
             email = user.Email,
             userName = user.UserName,
-            role
+            role,
+            organizationId = user.OrganizationId
         });
     }
 
@@ -107,6 +110,12 @@ public class UserController : ControllerBase
         {
             user.Email = request.Email;
             user.UserName = request.Email;
+        }
+
+        // Update organization if provided
+        if (request.OrganizationId.HasValue)
+        {
+            user.OrganizationId = request.OrganizationId.Value == 0 ? null : request.OrganizationId;
         }
 
         // Update password if provided
@@ -201,10 +210,11 @@ public class UserController : ControllerBase
             id = user.Id,
             email = user.Email,
             userName = user.UserName,
-            role = roles.FirstOrDefault() ?? "STUDENT"
+            role = roles.FirstOrDefault() ?? "STUDENT",
+            organizationId = user.OrganizationId
         });
     }
 }
 
-public record CreateUserRequest(string Email, string Password, string? Role = "STUDENT");
-public record UpdateUserRequest(string? Email = null, string? Password = null, string? Role = null);
+public record CreateUserRequest(string Email, string Password, string? Role = "STUDENT", int? OrganizationId = null);
+public record UpdateUserRequest(string? Email = null, string? Password = null, string? Role = null, int? OrganizationId = null);
