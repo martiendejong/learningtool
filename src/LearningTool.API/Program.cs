@@ -19,7 +19,7 @@ builder.Services.AddDbContext<LearningToolDbContext>(options =>
     options.UseSqlite(connectionString));
 
 // Identity configuration
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     // Password settings
     options.Password.RequireDigit = true;
@@ -138,6 +138,16 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+// Seed roles and default admin user
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+    await LearningTool.API.RoleSeeder.SeedRolesAndAdmin(roleManager, userManager, configuration);
+}
 
 // Configure HTTP request pipeline
 if (app.Environment.IsDevelopment())

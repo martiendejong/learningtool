@@ -1,3 +1,4 @@
+using LearningTool.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -11,13 +12,13 @@ namespace LearningTool.API.Controllers;
 [Route("[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
 
     public AuthController(
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager,
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
         IConfiguration configuration)
     {
         _userManager = userManager;
@@ -39,7 +40,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Email already registered" });
         }
 
-        var user = new IdentityUser
+        var user = new ApplicationUser
         {
             UserName = request.Email,
             Email = request.Email
@@ -51,7 +52,11 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Registration failed", errors = result.Errors });
         }
 
-        var token = GenerateJwtToken(user);
+        // Assign default STUDENT role to new users
+        await _userManager.AddToRoleAsync(user, "STUDENT");
+
+        var token = await GenerateJwtToken(user);
+        var roles = await _userManager.GetRolesAsync(user);
         return Ok(new
         {
             token,
@@ -59,7 +64,8 @@ public class AuthController : ControllerBase
             {
                 id = user.Id,
                 email = user.Email,
-                userName = user.UserName
+                userName = user.UserName,
+                role = roles.FirstOrDefault() ?? "STUDENT"
             }
         });
     }
@@ -84,7 +90,8 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid credentials" });
         }
 
-        var token = GenerateJwtToken(user);
+        var token = await GenerateJwtToken(user);
+        var roles = await _userManager.GetRolesAsync(user);
         return Ok(new
         {
             token,
@@ -92,24 +99,32 @@ public class AuthController : ControllerBase
             {
                 id = user.Id,
                 email = user.Email,
-                userName = user.UserName
+                userName = user.UserName,
+                role = roles.FirstOrDefault() ?? "STUDENT"
             }
         });
     }
 
-    private string GenerateJwtToken(IdentityUser user)
+    private async Task<string> GenerateJwtToken(ApplicationUser user)
     {
         var jwtKey = _configuration["Jwt:Key"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "LearningTool";
         var jwtAudience = _configuration["Jwt:Audience"] ?? "LearningToolUsers";
 
-        var claims = new[]
+        var roles = await _userManager.GetRolesAsync(user);
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Name, user.UserName ?? user.Email),
             new Claim(ClaimTypes.Email, user.Email ?? ""),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+
+        // Add role claims
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
