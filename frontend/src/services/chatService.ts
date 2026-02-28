@@ -48,4 +48,19 @@ export const chatService = {
   async clearHistory(): Promise<void> {
     await api.delete('/chat/history');
   },
+
+  // Course-specific chat methods
+  async sendCourseMessage(courseId: number, message: string): Promise<ChatResponse> {
+    const response = await api.post<ChatResponse>(`/chat/course/${courseId}/message`, { message });
+    return response.data;
+  },
+
+  async getCourseHistory(courseId: number, limit = 50): Promise<ChatMessage[]> {
+    const response = await api.get<ChatMessage[]>(`/chat/course/${courseId}/history`, { params: { limit } });
+    return response.data;
+  },
+
+  async clearCourseHistory(courseId: number): Promise<void> {
+    await api.delete(`/chat/course/${courseId}/history`);
+  },
 };
