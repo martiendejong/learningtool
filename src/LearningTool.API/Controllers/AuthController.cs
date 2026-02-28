@@ -1,3 +1,4 @@
+using LearningTool.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -11,13 +12,13 @@ namespace LearningTool.API.Controllers;
 [Route("[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
 
     public AuthController(
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager,
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
         IConfiguration configuration)
     {
         _userManager = userManager;
@@ -39,7 +40,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Email already registered" });
         }
 
-        var user = new IdentityUser
+        var user = new ApplicationUser
         {
             UserName = request.Email,
             Email = request.Email
@@ -104,7 +105,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    private async Task<string> GenerateJwtToken(IdentityUser user)
+    private async Task<string> GenerateJwtToken(ApplicationUser user)
     {
         var jwtKey = _configuration["Jwt:Key"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "LearningTool";

@@ -1,3 +1,4 @@
+using LearningTool.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +10,11 @@ namespace LearningTool.API.Controllers;
 [Authorize]
 public class UserController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
 
     public UserController(
-        UserManager<IdentityUser> userManager,
+        UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager)
     {
         _userManager = userManager;
@@ -38,7 +39,7 @@ public class UserController : ControllerBase
                 userName = user.UserName,
                 emailConfirmed = user.EmailConfirmed,
                 role = roles.FirstOrDefault() ?? "STUDENT",
-                createdAt = user.LockoutEnd, // Using available field as placeholder
+                createdAt = user.CreatedAt
             });
         }
 
@@ -61,7 +62,7 @@ public class UserController : ControllerBase
             return BadRequest(new { message = "Email already exists" });
         }
 
-        var user = new IdentityUser
+        var user = new ApplicationUser
         {
             UserName = request.Email,
             Email = request.Email,

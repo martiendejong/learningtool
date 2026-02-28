@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace LearningTool.Infrastructure.Data;
 
-public class LearningToolDbContext : IdentityDbContext<IdentityUser>
+public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
 {
     public LearningToolDbContext(DbContextOptions<LearningToolDbContext> options)
         : base(options)

@@ -1,3 +1,4 @@
+using LearningTool.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 
 namespace LearningTool.API;
@@ -6,7 +7,7 @@ public static class RoleSeeder
 {
     public static async Task SeedRolesAndAdmin(
         RoleManager<IdentityRole> roleManager,
-        UserManager<IdentityUser> userManager,
+        UserManager<ApplicationUser> userManager,
         IConfiguration configuration)
     {
         // Create roles if they don't exist
@@ -27,7 +28,7 @@ public static class RoleSeeder
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
         {
-            adminUser = new IdentityUser
+            adminUser = new ApplicationUser
             {
                 UserName = adminEmail,
                 Email = adminEmail,
