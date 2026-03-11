@@ -1,16 +1,25 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { organizationService } from '../services/organizationService';
 
-export default function RegisterPage() {
+export default function InvitePage() {
+  const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
+  const { setAuth } = useAuthStore();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [accountType, setAccountType] = useState<'Individual' | 'Organization'>('Individual');
   const [error, setError] = useState('');
-  const { register, isLoading } = useAuthStore();
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!token) {
+      setError('Invalid invitation link');
+    }
+  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,13 +35,52 @@ export default function RegisterPage() {
       return;
     }
 
-    const success = await register(email, password, fullName, accountType);
-    if (success) {
+    if (!token) {
+      setError('Invalid invitation token');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await organizationService.acceptInvite({
+        token,
+        email,
+        password,
+        fullName: fullName || undefined,
+      });
+
+      // Set authentication state
+      setAuth(response);
+
+      // Redirect to chat/dashboard
       navigate('/chat');
-    } else {
-      setError('Registration failed. Email may already be in use.');
+    } catch (err: any) {
+      console.error('Failed to accept invitation:', err);
+      setError(err.response?.data?.message || 'Failed to accept invitation');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-100">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 border-t-4 border-red-500">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Invalid Invitation</h2>
+          <p className="text-gray-600 mb-4">
+            This invitation link is invalid or has expired.
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-100">
@@ -47,7 +95,10 @@ export default function RegisterPage() {
           <p className="text-sm text-gray-600">Empowering through education</p>
         </div>
 
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800">Create Your Account</h2>
+        <h2 className="text-2xl font-semibold mb-2 text-gray-800">Accept Invitation</h2>
+        <p className="text-sm text-gray-600 mb-6">
+          You've been invited to join an organization. Create your account to get started.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -77,21 +128,6 @@ export default function RegisterPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="you@example.com"
             />
-          </div>
-
-          <div>
-            <label htmlFor="accountType" className="block text-sm font-medium text-gray-700 mb-1">
-              Account Type
-            </label>
-            <select
-              id="accountType"
-              value={accountType}
-              onChange={(e) => setAccountType(e.target.value as 'Individual' | 'Organization')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="Individual">Individual (Student)</option>
-              <option value="Organization">Organization (Company/School)</option>
-            </select>
           </div>
 
           <div>
@@ -132,18 +168,21 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={loading}
             className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white py-2 px-4 rounded-md hover:shadow-lg hover:from-green-700 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {isLoading ? 'Creating account...' : 'Create Account'}
+            {loading ? 'Accepting...' : 'Accept Invitation & Join'}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{' '}
-          <Link to="/login" className="text-green-600 hover:text-green-700 font-medium font-medium">
+          <button
+            onClick={() => navigate('/login')}
+            className="text-green-600 hover:text-green-700 font-medium"
+          >
             Sign in
-          </Link>
+          </button>
         </p>
       </div>
     </div>
