@@ -116,8 +116,8 @@ public class SkillsController : ControllerBase
         // Create UserSkill
         var userSkill = new DynamicEntity();
         userSkill["userId"] = userId;
-        userSkill["skillId"] = request.SkillId;
-        userSkill["status"] = request.Status ?? "Learning";
+        userSkill["skillId"] = skillGuid;
+        userSkill["status"] = request.Status ?? "InProgress";
         userSkill["startedAt"] = DateTime.UtcNow.ToString("O");
 
         await _store.CreateAsync("UserSkill", userSkill);

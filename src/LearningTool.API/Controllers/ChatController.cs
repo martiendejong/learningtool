@@ -300,11 +300,20 @@ When users want to learn something, guide them through skills, topics, and cours
                 // Create UserSkill
                 var userSkill = new DynamicEntity();
                 userSkill["userId"] = userId;
-                userSkill["skillId"] = skillId;
-                userSkill["status"] = "Learning";
+                userSkill["skillId"] = skillGuid;
+                userSkill["status"] = "InProgress";
                 userSkill["startedAt"] = DateTime.UtcNow.ToString("O");
 
-                await _store.CreateAsync("UserSkill", userSkill);
+                try
+                {
+                    await _store.CreateAsync("UserSkill", userSkill);
+                    _logger.LogInformation("Created UserSkill for user {UserId}, skill {SkillId}", userId, skillId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create UserSkill for user {UserId}, skill {SkillId}", userId, skillId);
+                    return $"Error creating user skill: {ex.Message}";
+                }
 
                 return $"Successfully added skill: {skill["name"]}";
 
