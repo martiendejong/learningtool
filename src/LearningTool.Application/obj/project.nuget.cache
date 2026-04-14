@@ -1,17 +1,17 @@
 {
   "version": 2,
-  "dgSpecHash": "eeJVI/n9LbY=",
+  "dgSpecHash": "YQb/X6mTqGg=",
   "success": true,
-  "projectFilePath": "E:\\projects\\learningtool\\src\\LearningTool.Application\\LearningTool.Application.csproj",
+  "projectFilePath": "C:\\projects\\learningtool\\src\\LearningTool.Application\\LearningTool.Application.csproj",
   "expectedPackageFiles": [
-    "E:\\nuget-cache\\.nuget\\microsoft.extensions.configuration.abstractions\\10.0.3\\microsoft.extensions.configuration.abstractions.10.0.3.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\microsoft.extensions.logging.abstractions\\8.0.3\\microsoft.extensions.logging.abstractions.8.0.3.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\microsoft.extensions.primitives\\10.0.3\\microsoft.extensions.primitives.10.0.3.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\openai\\2.8.0\\openai.2.8.0.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\system.clientmodel\\1.8.1\\system.clientmodel.1.8.1.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\system.memory.data\\8.0.1\\system.memory.data.8.0.1.nupkg.sha512",
-    "E:\\nuget-cache\\.nuget\\system.net.serversentevents\\9.0.9\\system.net.serversentevents.9.0.9.nupkg.sha512"
+    "C:\\Users\\marti\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.3\\microsoft.extensions.configuration.abstractions.10.0.3.nupkg.sha512",
+    "C:\\Users\\marti\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "C:\\Users\\marti\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.3\\microsoft.extensions.logging.abstractions.8.0.3.nupkg.sha512",
+    "C:\\Users\\marti\\.nuget\\packages\\microsoft.extensions.primitives\\10.0.3\\microsoft.extensions.primitives.10.0.3.nupkg.sha512",
+    "C:\\Users\\marti\\.nuget\\packages\\openai\\2.8.0\\openai.2.8.0.nupkg.sha512",
+    "C:\\Users\\marti\\.nuget\\packages\\system.clientmodel\\1.8.1\\system.clientmodel.1.8.1.nupkg.sha512",
+    "C:\\Users\\marti\\.nuget\\packages\\system.memory.data\\8.0.1\\system.memory.data.8.0.1.nupkg.sha512",
+    "C:\\Users\\marti\\.nuget\\packages\\system.net.serversentevents\\9.0.9\\system.net.serversentevents.9.0.9.nupkg.sha512"
   ],
   "logs": []
 }

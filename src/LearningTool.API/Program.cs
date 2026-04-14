@@ -16,7 +16,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? "Data Source=learningtool.db";
 
 builder.Services.AddDbContext<LearningToolDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseNpgsql(connectionString));
 
 // Identity configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

@@ -99,24 +99,24 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
-            entity.Property(e => e.Content).HasColumnType("TEXT");
+            entity.Property(e => e.Content).HasColumnType("text");
             entity.Property(e => e.CreatedAt).IsRequired();
 
-            // Store Prerequisites as JSON
+            // Store Prerequisites as JSONB
             entity.Property(e => e.Prerequisites)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                     v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
                 )
-                .HasColumnType("TEXT");
+                .HasColumnType("jsonb");
 
-            // Store ResourceLinks as JSON
+            // Store ResourceLinks as JSONB
             entity.Property(e => e.ResourceLinks)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                     v => JsonSerializer.Deserialize<List<ResourceLink>>(v, (JsonSerializerOptions?)null) ?? new List<ResourceLink>()
                 )
-                .HasColumnType("TEXT");
+                .HasColumnType("jsonb");
         });
 
         // UserSkill configuration
@@ -168,12 +168,11 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => new { e.UserId, e.CourseId });  // Index for course-specific chat queries
             entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
             entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Content).IsRequired().HasColumnType("TEXT");
+            entity.Property(e => e.Content).IsRequired().HasColumnType("text");
             entity.Property(e => e.Timestamp).IsRequired();
 
-            // Store ToolCalls as JSON
-            // ToolCalls is stored as JSON string
-            entity.Property(e => e.ToolCalls).HasColumnType("TEXT");
+            // Store ToolCalls as JSONB
+            entity.Property(e => e.ToolCalls).HasColumnType("jsonb");
 
             // Course relationship (optional - null for general chat)
             entity.HasOne(e => e.Course)
