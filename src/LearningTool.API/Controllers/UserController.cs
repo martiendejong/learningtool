@@ -23,7 +23,7 @@ public class UserController : ControllerBase
 
     // GET /api/user - List all users (admin only)
     [HttpGet]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "SYSTEMADMIN")]
     public async Task<IActionResult> GetUsers()
     {
         var users = _userManager.Users.ToList();
@@ -38,7 +38,7 @@ public class UserController : ControllerBase
                 email = user.Email,
                 userName = user.UserName,
                 emailConfirmed = user.EmailConfirmed,
-                role = roles.FirstOrDefault() ?? "STUDENT",
+                role = roles.FirstOrDefault() ?? "INDIVIDUAL",
                 organizationId = user.OrganizationId,
                 createdAt = user.CreatedAt
             });
@@ -49,7 +49,7 @@ public class UserController : ControllerBase
 
     // POST /api/user - Create user (admin only)
     [HttpPost]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "SYSTEMADMIN")]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
@@ -96,7 +96,7 @@ public class UserController : ControllerBase
 
     // PUT /api/user/{id} - Update user (admin only)
     [HttpPut("{id}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "SYSTEMADMIN")]
     public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserRequest request)
     {
         var user = await _userManager.FindByIdAsync(id);
@@ -148,7 +148,7 @@ public class UserController : ControllerBase
 
     // DELETE /api/user/{id} - Delete user (admin only)
     [HttpDelete("{id}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "SYSTEMADMIN")]
     public async Task<IActionResult> DeleteUser(string id)
     {
         // Prevent admin from deleting themselves
@@ -175,13 +175,15 @@ public class UserController : ControllerBase
 
     // GET /api/user/roles - Get available roles
     [HttpGet("roles")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "SYSTEMADMIN")]
     public IActionResult GetRoles()
     {
         var roles = new[]
         {
-            new { value = "ADMIN", label = "Administrator", description = "Full system access" },
-            new { value = "STUDENT", label = "Student", description = "Standard user access" }
+            new { value = "SYSTEMADMIN", label = "System Administrator", description = "Full system access" },
+            new { value = "ORGADMIN", label = "Organization Administrator", description = "Manages a single organization's students and content" },
+            new { value = "STUDENT", label = "Student", description = "Org-assigned learner with access to organization content" },
+            new { value = "INDIVIDUAL", label = "Individual", description = "Self-registered learner" }
         };
 
         return Ok(roles);
@@ -210,11 +212,11 @@ public class UserController : ControllerBase
             id = user.Id,
             email = user.Email,
             userName = user.UserName,
-            role = roles.FirstOrDefault() ?? "STUDENT",
+            role = roles.FirstOrDefault() ?? "INDIVIDUAL",
             organizationId = user.OrganizationId
         });
     }
 }
 
-public record CreateUserRequest(string Email, string Password, string? Role = "STUDENT", int? OrganizationId = null);
+public record CreateUserRequest(string Email, string Password, string? Role = "INDIVIDUAL", int? OrganizationId = null);
 public record UpdateUserRequest(string? Email = null, string? Password = null, string? Role = null, int? OrganizationId = null);

@@ -1,6 +1,8 @@
 using LearningTool.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -27,6 +29,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
@@ -52,8 +55,8 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Registration failed", errors = result.Errors });
         }
 
-        // Assign default STUDENT role to new users
-        await _userManager.AddToRoleAsync(user, "STUDENT");
+        // Self-registered users get INDIVIDUAL role
+        await _userManager.AddToRoleAsync(user, "INDIVIDUAL");
 
         var token = await GenerateJwtToken(user);
         var roles = await _userManager.GetRolesAsync(user);
@@ -65,12 +68,13 @@ public class AuthController : ControllerBase
                 id = user.Id,
                 email = user.Email,
                 userName = user.UserName,
-                role = roles.FirstOrDefault() ?? "STUDENT"
+                role = roles.FirstOrDefault() ?? "INDIVIDUAL"
             }
         });
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
@@ -100,9 +104,24 @@ public class AuthController : ControllerBase
                 id = user.Id,
                 email = user.Email,
                 userName = user.UserName,
-                role = roles.FirstOrDefault() ?? "STUDENT"
+                role = roles.FirstOrDefault() ?? "INDIVIDUAL"
             }
         });
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId == null) return Unauthorized();
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return Unauthorized();
+
+        // Rotating the security stamp invalidates all existing tokens for this user
+        await _userManager.UpdateSecurityStampAsync(user);
+        return Ok(new { message = "Logged out successfully" });
     }
 
     private async Task<string> GenerateJwtToken(ApplicationUser user)
@@ -115,9 +134,10 @@ public class AuthController : ControllerBase
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Name, user.UserName ?? user.Email),
+            new Claim(ClaimTypes.Name, user.UserName ?? user.Email ?? ""),
             new Claim(ClaimTypes.Email, user.Email ?? ""),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("SecurityStamp", user.SecurityStamp ?? "")
         };
 
         // Add role claims

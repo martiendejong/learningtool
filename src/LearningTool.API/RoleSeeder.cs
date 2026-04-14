@@ -11,7 +11,7 @@ public static class RoleSeeder
         IConfiguration configuration)
     {
         // Create roles if they don't exist
-        string[] roles = { "ADMIN", "STUDENT" };
+        string[] roles = { "SYSTEMADMIN", "ORGADMIN", "STUDENT", "INDIVIDUAL" };
 
         foreach (var role in roles)
         {
@@ -38,7 +38,7 @@ public static class RoleSeeder
             var result = await userManager.CreateAsync(adminUser, adminPassword);
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(adminUser, "ADMIN");
+                await userManager.AddToRoleAsync(adminUser, "SYSTEMADMIN");
                 Console.WriteLine($"Default admin user created: {adminEmail}");
             }
             else
@@ -48,11 +48,11 @@ public static class RoleSeeder
         }
         else
         {
-            // Ensure existing user has admin role
-            var roles_user = await userManager.GetRolesAsync(adminUser);
-            if (!roles_user.Contains("ADMIN"))
+            // Ensure existing user has SYSTEMADMIN role
+            var userRoles = await userManager.GetRolesAsync(adminUser);
+            if (!userRoles.Contains("SYSTEMADMIN"))
             {
-                await userManager.AddToRoleAsync(adminUser, "ADMIN");
+                await userManager.AddToRoleAsync(adminUser, "SYSTEMADMIN");
             }
         }
     }

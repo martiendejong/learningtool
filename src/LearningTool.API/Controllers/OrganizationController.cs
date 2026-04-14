@@ -8,7 +8,7 @@ namespace LearningTool.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "ADMIN")]
+[Authorize(Roles = "SYSTEMADMIN")]
 public class OrganizationController : ControllerBase
 {
     private readonly LearningToolDbContext _context;

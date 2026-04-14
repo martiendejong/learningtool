@@ -4,12 +4,28 @@ using LearningTool.Infrastructure.Data;
 using LearningTool.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Rate limiting — 10 requests per minute per IP on auth endpoints
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("auth", opt =>
+    {
+        opt.PermitLimit = 10;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 // Database configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -55,6 +71,31 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+
+    // Validate security stamp on every authenticated request
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var userManager = context.HttpContext.RequestServices
+                .GetRequiredService<UserManager<ApplicationUser>>();
+
+            var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var stampInToken = context.Principal?.FindFirstValue("SecurityStamp");
+
+            if (userId == null || stampInToken == null)
+            {
+                context.Fail("Invalid token");
+                return;
+            }
+
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null || user.SecurityStamp != stampInToken)
+            {
+                context.Fail("Token has been revoked");
+            }
+        }
     };
 });
 // Google OAuth disabled for now - uncomment when ClientId/Secret configured
@@ -170,6 +211,8 @@ if (app.Environment.IsDevelopment())
 // app.UseHttpsRedirection(); // Temporarily disabled for production - SSL certificate needs configuration
 
 app.UseCors();
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
