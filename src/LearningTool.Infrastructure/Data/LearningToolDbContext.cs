@@ -32,6 +32,15 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
     // Org invitations
     public DbSet<Invitation> Invitations { get; set; } = null!;
 
+    // Google OAuth — pending OTP verifications
+    public DbSet<PendingGoogleVerification> PendingGoogleVerifications { get; set; } = null!;
+
+    // Bundle / licensing system
+    public DbSet<Bundle> Bundles { get; set; } = null!;
+    public DbSet<BundleSkill> BundleSkills { get; set; } = null!;
+    public DbSet<OrganizationBundle> OrganizationBundles { get; set; } = null!;
+    public DbSet<UserBundle> UserBundles { get; set; } = null!;
+
     // Chat history
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
 
@@ -192,6 +201,74 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(e => e.Organization)
                 .WithMany()
                 .HasForeignKey(e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // PendingGoogleVerification configuration
+        modelBuilder.Entity<PendingGoogleVerification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Email);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.GoogleId).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(10);
+            entity.Property(e => e.ExpiresAt).IsRequired();
+        });
+
+        // Bundle configuration
+        modelBuilder.Entity<Bundle>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+        });
+
+        // BundleSkill configuration
+        modelBuilder.Entity<BundleSkill>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.BundleId, e.SkillId }).IsUnique();
+
+            entity.HasOne(e => e.Bundle)
+                .WithMany(b => b.BundleSkills)
+                .HasForeignKey(e => e.BundleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Skill)
+                .WithMany()
+                .HasForeignKey(e => e.SkillId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // OrganizationBundle configuration
+        modelBuilder.Entity<OrganizationBundle>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.OrganizationId, e.BundleId }).IsUnique();
+
+            entity.HasOne(e => e.Organization)
+                .WithMany()
+                .HasForeignKey(e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Bundle)
+                .WithMany(b => b.OrganizationBundles)
+                .HasForeignKey(e => e.BundleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // UserBundle configuration
+        modelBuilder.Entity<UserBundle>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.BundleId }).IsUnique();
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.AssignedByUserId).HasMaxLength(450);
+
+            entity.HasOne(e => e.Bundle)
+                .WithMany(b => b.UserBundles)
+                .HasForeignKey(e => e.BundleId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

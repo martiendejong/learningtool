@@ -1,3 +1,4 @@
+using LearningTool.API.Services;
 using LearningTool.Application.Services;
 using LearningTool.Domain.Interfaces;
 using LearningTool.Infrastructure.Data;
@@ -98,12 +99,27 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
-// Google OAuth disabled for now - uncomment when ClientId/Secret configured
-//.AddGoogle(options =>
-//{
-//    options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
-//    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
-//});
+// Google OAuth — only wired up when credentials are present in config
+var googleClientId = builder.Configuration["Google:ClientId"];
+var googleClientSecret = builder.Configuration["Google:ClientSecret"];
+if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
+{
+    builder.Services.AddAuthentication()
+        .AddCookie("GoogleTemp", opt =>
+        {
+            opt.Cookie.SameSite = SameSiteMode.Lax;
+            opt.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        })
+        .AddGoogle(opt =>
+        {
+            opt.ClientId = googleClientId;
+            opt.ClientSecret = googleClientSecret;
+            opt.SignInScheme = "GoogleTemp";
+            opt.CallbackPath = new Microsoft.AspNetCore.Http.PathString("/auth/google/callback");
+            opt.CorrelationCookie.SameSite = SameSiteMode.Lax;
+            opt.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        });
+}
 
 builder.Services.AddAuthorization();
 
@@ -115,6 +131,9 @@ builder.Services.AddScoped<IUserSkillRepository, UserSkillRepository>();
 builder.Services.AddScoped<IUserTopicRepository, UserTopicRepository>();
 builder.Services.AddScoped<IUserCourseRepository, UserCourseRepository>();
 builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+
+// Email service
+builder.Services.AddScoped<EmailService>();
 
 // Service registration
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();

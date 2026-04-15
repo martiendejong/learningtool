@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LearningTool.API.Controllers;
 
@@ -222,3 +223,166 @@ public record AdminUpdateSkillRequest(
     string? Name = null,
     string? Description = null,
     DifficultyLevel? Difficulty = null);
+
+// ── Bundle management (SYSTEMADMIN) ───────────────────────────────────────────
+
+[ApiController]
+[Route("api/admin/bundles")]
+[Authorize(Roles = "SYSTEMADMIN")]
+public class AdminBundleController : ControllerBase
+{
+    private readonly LearningToolDbContext _context;
+
+    public AdminBundleController(LearningToolDbContext context)
+    {
+        _context = context;
+    }
+
+    // GET /api/admin/bundles
+    [HttpGet]
+    public async Task<IActionResult> GetBundles()
+    {
+        var bundles = await _context.Bundles
+            .Select(b => new
+            {
+                b.Id,
+                b.Name,
+                b.Description,
+                b.CreatedAt,
+                skillCount = b.BundleSkills.Count,
+                orgCount = b.OrganizationBundles.Count,
+                skills = b.BundleSkills.Select(bs => new { bs.Skill.Id, bs.Skill.Name })
+            })
+            .OrderBy(b => b.Name)
+            .ToListAsync();
+
+        return Ok(bundles);
+    }
+
+    // POST /api/admin/bundles
+    [HttpPost]
+    public async Task<IActionResult> CreateBundle([FromBody] BundleRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { message = "Name is required" });
+
+        if (await _context.Bundles.AnyAsync(b => b.Name == request.Name))
+            return BadRequest(new { message = "A bundle with this name already exists" });
+
+        var bundle = new Bundle { Name = request.Name, Description = request.Description };
+        _context.Bundles.Add(bundle);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { bundle.Id, bundle.Name, bundle.Description, bundle.CreatedAt });
+    }
+
+    // PUT /api/admin/bundles/{id}
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateBundle(int id, [FromBody] BundleRequest request)
+    {
+        var bundle = await _context.Bundles.FindAsync(id);
+        if (bundle == null) return NotFound();
+
+        if (!string.IsNullOrWhiteSpace(request.Name)) bundle.Name = request.Name;
+        if (request.Description != null) bundle.Description = request.Description;
+
+        await _context.SaveChangesAsync();
+        return Ok(new { bundle.Id, bundle.Name, bundle.Description });
+    }
+
+    // DELETE /api/admin/bundles/{id}
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteBundle(int id)
+    {
+        var bundle = await _context.Bundles.FindAsync(id);
+        if (bundle == null) return NotFound();
+
+        _context.Bundles.Remove(bundle);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // POST /api/admin/bundles/{bundleId}/skills/{skillId}
+    [HttpPost("{bundleId:int}/skills/{skillId:int}")]
+    public async Task<IActionResult> AddSkillToBundle(int bundleId, int skillId)
+    {
+        if (!await _context.Bundles.AnyAsync(b => b.Id == bundleId))
+            return NotFound(new { message = "Bundle not found" });
+        if (!await _context.Skills.AnyAsync(s => s.Id == skillId))
+            return NotFound(new { message = "Skill not found" });
+        if (await _context.BundleSkills.AnyAsync(bs => bs.BundleId == bundleId && bs.SkillId == skillId))
+            return BadRequest(new { message = "Skill already in bundle" });
+
+        _context.BundleSkills.Add(new BundleSkill { BundleId = bundleId, SkillId = skillId });
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // DELETE /api/admin/bundles/{bundleId}/skills/{skillId}
+    [HttpDelete("{bundleId:int}/skills/{skillId:int}")]
+    public async Task<IActionResult> RemoveSkillFromBundle(int bundleId, int skillId)
+    {
+        var bs = await _context.BundleSkills
+            .FirstOrDefaultAsync(x => x.BundleId == bundleId && x.SkillId == skillId);
+        if (bs == null) return NotFound();
+
+        _context.BundleSkills.Remove(bs);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // POST /api/admin/bundles/{bundleId}/organizations/{orgId}
+    [HttpPost("{bundleId:int}/organizations/{orgId:int}")]
+    public async Task<IActionResult> AssignBundleToOrg(
+        int bundleId, int orgId, [FromBody] AssignBundleToOrgRequest request)
+    {
+        if (!await _context.Bundles.AnyAsync(b => b.Id == bundleId))
+            return NotFound(new { message = "Bundle not found" });
+        if (!await _context.Organizations.AnyAsync(o => o.Id == orgId))
+            return NotFound(new { message = "Organization not found" });
+        if (await _context.OrganizationBundles.AnyAsync(ob => ob.BundleId == bundleId && ob.OrganizationId == orgId))
+            return BadRequest(new { message = "Bundle already assigned to this organization" });
+
+        _context.OrganizationBundles.Add(new OrganizationBundle
+        {
+            BundleId = bundleId,
+            OrganizationId = orgId,
+            MaxUsers = request.MaxUsers ?? 0,
+            IsUnlimited = request.IsUnlimited ?? false
+        });
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // PUT /api/admin/bundles/{bundleId}/organizations/{orgId}  — update seat config
+    [HttpPut("{bundleId:int}/organizations/{orgId:int}")]
+    public async Task<IActionResult> UpdateOrgBundle(
+        int bundleId, int orgId, [FromBody] AssignBundleToOrgRequest request)
+    {
+        var ob = await _context.OrganizationBundles
+            .FirstOrDefaultAsync(x => x.BundleId == bundleId && x.OrganizationId == orgId);
+        if (ob == null) return NotFound();
+
+        if (request.MaxUsers.HasValue) ob.MaxUsers = request.MaxUsers.Value;
+        if (request.IsUnlimited.HasValue) ob.IsUnlimited = request.IsUnlimited.Value;
+
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // DELETE /api/admin/bundles/{bundleId}/organizations/{orgId}
+    [HttpDelete("{bundleId:int}/organizations/{orgId:int}")]
+    public async Task<IActionResult> UnassignBundleFromOrg(int bundleId, int orgId)
+    {
+        var ob = await _context.OrganizationBundles
+            .FirstOrDefaultAsync(x => x.BundleId == bundleId && x.OrganizationId == orgId);
+        if (ob == null) return NotFound();
+
+        _context.OrganizationBundles.Remove(ob);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+}
+
+public record BundleRequest(string Name, string? Description = null);
+public record AssignBundleToOrgRequest(int? MaxUsers = null, bool? IsUnlimited = null);

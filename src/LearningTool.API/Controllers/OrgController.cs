@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+#pragma warning disable CA1304
 
 namespace LearningTool.API.Controllers;
 
@@ -301,6 +302,127 @@ public class OrgController : ControllerBase
         _context.Invitations.Remove(invite);
         await _context.SaveChangesAsync();
 
+        return NoContent();
+    }
+
+    // ── Members ───────────────────────────────────────────────────────────────
+
+    // ── Bundles ───────────────────────────────────────────────────────────────
+
+    // GET /api/org/bundles
+    [HttpGet("bundles")]
+    public async Task<IActionResult> GetBundles()
+    {
+        var orgId = OrgId;
+
+        var bundles = await _context.OrganizationBundles
+            .Where(ob => ob.OrganizationId == orgId)
+            .Select(ob => new
+            {
+                ob.Id,
+                ob.BundleId,
+                bundleName = ob.Bundle!.Name,
+                bundleDescription = ob.Bundle.Description,
+                ob.MaxUsers,
+                ob.IsUnlimited,
+                ob.CreatedAt,
+                skillCount = ob.Bundle.BundleSkills.Count,
+                skills = ob.Bundle.BundleSkills.Select(bs => new { bs.Skill.Id, bs.Skill.Name }),
+                assignedUsers = _context.UserBundles
+                    .Count(ub => ub.BundleId == ob.BundleId
+                        && _userManager.Users.Any(u => u.Id == ub.UserId && u.OrganizationId == orgId))
+            })
+            .ToListAsync();
+
+        return Ok(bundles);
+    }
+
+    // GET /api/org/bundles/{bundleId}/users
+    [HttpGet("bundles/{bundleId:int}/users")]
+    public async Task<IActionResult> GetBundleUsers(int bundleId)
+    {
+        var orgId = OrgId;
+
+        if (!await _context.OrganizationBundles
+                .AnyAsync(ob => ob.OrganizationId == orgId && ob.BundleId == bundleId))
+            return NotFound(new { message = "Bundle not assigned to your organization" });
+
+        var assignedUserIds = await _context.UserBundles
+            .Where(ub => ub.BundleId == bundleId)
+            .Select(ub => ub.UserId)
+            .ToListAsync();
+
+        var members = await _userManager.Users
+            .Where(u => u.OrganizationId == orgId)
+            .Select(u => new
+            {
+                u.Id,
+                u.Email,
+                isAssigned = assignedUserIds.Contains(u.Id)
+            })
+            .OrderBy(u => u.Email)
+            .ToListAsync();
+
+        return Ok(members);
+    }
+
+    // POST /api/org/bundles/{bundleId}/users/{userId}
+    [HttpPost("bundles/{bundleId:int}/users/{userId}")]
+    public async Task<IActionResult> AssignBundleToUser(int bundleId, string userId)
+    {
+        var orgId = OrgId;
+
+        var orgBundle = await _context.OrganizationBundles
+            .FirstOrDefaultAsync(ob => ob.OrganizationId == orgId && ob.BundleId == bundleId);
+        if (orgBundle == null)
+            return NotFound(new { message = "Bundle not assigned to your organization" });
+
+        var user = await _userManager.Users
+            .FirstOrDefaultAsync(u => u.Id == userId && u.OrganizationId == orgId);
+        if (user == null)
+            return NotFound(new { message = "User not found in your organization" });
+
+        if (await _context.UserBundles.AnyAsync(ub => ub.UserId == userId && ub.BundleId == bundleId))
+            return BadRequest(new { message = "User already has this bundle" });
+
+        // Seat limit check
+        if (!orgBundle.IsUnlimited)
+        {
+            var currentCount = await _context.UserBundles
+                .CountAsync(ub => ub.BundleId == bundleId
+                    && _userManager.Users.Any(u => u.Id == ub.UserId && u.OrganizationId == orgId));
+
+            if (currentCount >= orgBundle.MaxUsers)
+                return BadRequest(new { message = $"Seat limit reached ({orgBundle.MaxUsers} max)" });
+        }
+
+        _context.UserBundles.Add(new UserBundle
+        {
+            UserId = userId,
+            BundleId = bundleId,
+            AssignedByUserId = UserId,
+            AssignedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // DELETE /api/org/bundles/{bundleId}/users/{userId}
+    [HttpDelete("bundles/{bundleId:int}/users/{userId}")]
+    public async Task<IActionResult> RemoveBundleFromUser(int bundleId, string userId)
+    {
+        var orgId = OrgId;
+
+        if (!await _context.OrganizationBundles
+                .AnyAsync(ob => ob.OrganizationId == orgId && ob.BundleId == bundleId))
+            return NotFound(new { message = "Bundle not assigned to your organization" });
+
+        var ub = await _context.UserBundles
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.BundleId == bundleId);
+        if (ub == null) return NotFound();
+
+        _context.UserBundles.Remove(ub);
+        await _context.SaveChangesAsync();
         return NoContent();
     }
 
