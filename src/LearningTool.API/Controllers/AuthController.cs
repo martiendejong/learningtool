@@ -1,11 +1,14 @@
+using LearningTool.Domain.Entities;
 using LearningTool.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace LearningTool.API.Controllers;
@@ -17,15 +20,18 @@ public class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
+    private readonly LearningToolDbContext _context;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        LearningToolDbContext context)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
+        _context = context;
     }
 
     [HttpPost("register")]
@@ -33,42 +39,58 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-        {
             return BadRequest(new { message = "Email and password are required" });
-        }
 
         var existingUser = await _userManager.FindByEmailAsync(request.Email);
         if (existingUser != null)
-        {
             return BadRequest(new { message = "Email already registered" });
+
+        // Resolve invite token if provided
+        Invitation? invite = null;
+        if (!string.IsNullOrWhiteSpace(request.InviteToken))
+        {
+            var tokenHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(request.InviteToken)));
+            invite = await _context.Invitations
+                .FirstOrDefaultAsync(i => i.TokenHash == tokenHash
+                    && i.ExpiresAt > DateTime.UtcNow
+                    && i.UsedCount < i.MaxUses);
+
+            if (invite == null)
+                return BadRequest(new { message = "Invite link is invalid or expired" });
         }
 
         var user = new ApplicationUser
         {
             UserName = request.Email,
-            Email = request.Email
+            Email = request.Email,
+            OrganizationId = invite?.OrganizationId
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
-        {
             return BadRequest(new { message = "Registration failed", errors = result.Errors });
+
+        var role = invite != null ? "STUDENT" : "INDIVIDUAL";
+        await _userManager.AddToRoleAsync(user, role);
+
+        if (invite != null)
+        {
+            invite.UsedCount++;
+            await _context.SaveChangesAsync();
         }
 
-        // Self-registered users get INDIVIDUAL role
-        await _userManager.AddToRoleAsync(user, "INDIVIDUAL");
-
-        var token = await GenerateJwtToken(user);
+        var jwtToken = await GenerateJwtToken(user);
         var roles = await _userManager.GetRolesAsync(user);
         return Ok(new
         {
-            token,
+            token = jwtToken,
             user = new
             {
                 id = user.Id,
                 email = user.Email,
                 userName = user.UserName,
-                role = roles.FirstOrDefault() ?? "INDIVIDUAL"
+                role = roles.FirstOrDefault() ?? role,
+                organizationId = user.OrganizationId
             }
         });
     }
@@ -140,6 +162,10 @@ public class AuthController : ControllerBase
             new Claim("SecurityStamp", user.SecurityStamp ?? "")
         };
 
+        // Embed organizationId so OrgAdmin controller can read it without a DB hit
+        if (user.OrganizationId.HasValue)
+            claims.Add(new Claim("organizationId", user.OrganizationId.Value.ToString()));
+
         // Add role claims
         foreach (var role in roles)
         {
@@ -161,5 +187,5 @@ public class AuthController : ControllerBase
     }
 }
 
-public record RegisterRequest(string Email, string Password);
+public record RegisterRequest(string Email, string Password, string? InviteToken = null);
 public record LoginRequest(string Email, string Password);

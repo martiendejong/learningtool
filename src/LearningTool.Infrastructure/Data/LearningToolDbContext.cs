@@ -26,6 +26,9 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<UserTopic> UserTopics { get; set; } = null!;
     public DbSet<UserCourse> UserCourses { get; set; } = null!;
 
+    // Org invitations
+    public DbSet<Invitation> Invitations { get; set; } = null!;
+
     // Chat history
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
 
@@ -158,6 +161,21 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(e => e.CourseId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Invitation configuration
+        modelBuilder.Entity<Invitation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.CreatedByUserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.ExpiresAt).IsRequired();
+
+            entity.HasOne(e => e.Organization)
+                .WithMany()
+                .HasForeignKey(e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // ChatMessage configuration
