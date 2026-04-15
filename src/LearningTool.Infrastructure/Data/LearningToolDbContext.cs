@@ -26,6 +26,9 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<UserTopic> UserTopics { get; set; } = null!;
     public DbSet<UserCourse> UserCourses { get; set; } = null!;
 
+    // Bookmarks
+    public DbSet<Bookmark> Bookmarks { get; set; } = null!;
+
     // Org invitations
     public DbSet<Invitation> Invitations { get; set; } = null!;
 
@@ -161,6 +164,20 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(e => e.CourseId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Bookmark configuration
+        modelBuilder.Entity<Bookmark>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.CourseId }).IsUnique();
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.Note).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Course)
+                .WithMany()
+                .HasForeignKey(e => e.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Invitation configuration
