@@ -40,6 +40,9 @@ export default function Layout() {
                 <Link to="/timeline" className={navLinkClass('/timeline')}>
                   📅 Journey
                 </Link>
+                <Link to="/snippets" className={navLinkClass('/snippets')}>
+                  📚 Snippets
+                </Link>
                 <Link to="/about" className={navLinkClass('/about')}>
                   ℹ️ About Us
                 </Link>

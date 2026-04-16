@@ -13,6 +13,7 @@ import CourseChatPage from './pages/CourseChatPage';
 import AboutPage from './pages/AboutPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminOrganizationsPage from './pages/AdminOrganizationsPage';
+import SnippetsPage from './pages/SnippetsPage';
 import Layout from './components/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -36,6 +37,7 @@ function App() {
           <Route path="course/:courseId" element={<CoursePage />} />
           <Route path="course-detail/:id" element={<CourseDetailPage />} />
           <Route path="course/:id/learn" element={<CourseChatPage />} />
+          <Route path="snippets" element={<SnippetsPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="admin/users" element={<AdminUsersPage />} />
           <Route path="admin/organizations" element={<AdminOrganizationsPage />} />
