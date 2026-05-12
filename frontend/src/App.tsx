@@ -33,6 +33,7 @@ const OrgDashboardPage    = lazy(() => import('./pages/OrgDashboardPage'));
 const OrgStudentsPage     = lazy(() => import('./pages/OrgStudentsPage'));
 const OrgInvitesPage      = lazy(() => import('./pages/OrgInvitesPage'));
 const OrgBundlesPage      = lazy(() => import('./pages/OrgBundlesPage'));
+const SnippetsPage        = lazy(() => import('./pages/SnippetsPage'));
 
 function PageLoader() {
   return (
@@ -100,6 +101,7 @@ function AppRoutes() {
             <Route path="course/:courseId" element={<CoursePage />} />
             <Route path="course-detail/:id" element={<CourseDetailPage />} />
             <Route path="course/:id/learn" element={<CourseChatPage />} />
+            <Route path="snippets" element={<SnippetsPage />} />
             <Route path="about" element={<AboutPage />} />
             <Route path="profile" element={<ProfilePage />} />
             {/* Admin */}

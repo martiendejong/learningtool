@@ -44,6 +44,9 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
     // Chat history
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
 
+    // Code snippets library
+    public DbSet<CodeSnippet> CodeSnippets { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -56,6 +59,7 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<UserSkill>().HasQueryFilter(us => !us.IsDeleted);
         modelBuilder.Entity<UserTopic>().HasQueryFilter(ut => !ut.IsDeleted);
         modelBuilder.Entity<UserCourse>().HasQueryFilter(uc => !uc.IsDeleted);
+        modelBuilder.Entity<CodeSnippet>().HasQueryFilter(s => !s.IsDeleted);
 
         // Organization configuration
         modelBuilder.Entity<Organization>(entity =>
@@ -270,6 +274,34 @@ public class LearningToolDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(b => b.UserBundles)
                 .HasForeignKey(e => e.BundleId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // CodeSnippet configuration
+        modelBuilder.Entity<CodeSnippet>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt });
+            entity.HasIndex(e => e.Language);
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.Code).IsRequired().HasColumnType("text");
+            entity.Property(e => e.Language).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.CreatedAt).IsRequired();
+
+            // Store Tags as JSONB (Postgres) — matches Course.Prerequisites pattern
+            entity.Property(e => e.Tags)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
+                )
+                .HasColumnType("jsonb");
+
+            // Optional course link — don't cascade delete from course
+            entity.HasOne(e => e.Course)
+                .WithMany()
+                .HasForeignKey(e => e.CourseId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ChatMessage configuration

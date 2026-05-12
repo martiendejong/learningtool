@@ -71,6 +71,12 @@ export default function Layout() {
                 <Link to="/timeline" className={navLinkClass('/timeline')}>
                   📅 Timeline
                 </Link>
+                <Link to="/snippets" className={navLinkClass('/snippets')}>
+                  📚 Snippets
+                </Link>
+                <Link to="/about" className={navLinkClass('/about')}>
+                  ℹ️ About Us
+                </Link>
                 {isOrgAdmin && (
                   <Link to="/org/dashboard" className={navLinkClass('/org/')}>
                     🏢 Org
