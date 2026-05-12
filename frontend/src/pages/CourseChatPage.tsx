@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import MessageContent from '../components/MessageContent';
 import { knowledgeService } from '../services/knowledgeService';
-import { chatService, type ChatMessage, type ChatResponse } from '../services/chatService';
+import { chatService, type ChatMessage } from '../services/chatService';
 import type { Course } from '../services/knowledgeService';
 
 export default function CourseChatPage() {

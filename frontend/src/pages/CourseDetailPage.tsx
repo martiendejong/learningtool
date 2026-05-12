@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { knowledgeService } from '../services/knowledgeService';
 import { chatService } from '../services/chatService';
+import { bookmarkService } from '../services/bookmarkService';
+import { useToast } from '../components/Toast';
 import type { Course } from '../services/knowledgeService';
 
 export default function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   useEffect(() => {
     loadCourseData();
@@ -22,10 +27,27 @@ export default function CourseDetailPage() {
       setLoading(true);
       const courseData = await knowledgeService.getCourseById(parseInt(id));
       setCourse(courseData);
+      const bm = await bookmarkService.isBookmarked(parseInt(id));
+      setBookmarked(bm);
     } catch (err) {
       console.error('Failed to load course:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleBookmark = async () => {
+    if (!course) return;
+    setBookmarkLoading(true);
+    try {
+      const result = await bookmarkService.toggleBookmark(course.id);
+      setBookmarked(result.bookmarked);
+      toast.success(result.bookmarked ? 'Course saved to bookmarks' : 'Bookmark removed');
+    } catch (err) {
+      toast.error('Failed to update bookmark');
+      console.error('Failed to toggle bookmark:', err);
+    } finally {
+      setBookmarkLoading(false);
     }
   };
 
@@ -36,11 +58,10 @@ export default function CourseDetailPage() {
       setStarting(true);
       // Start the course
       await chatService.startCourse(course.id);
-      // Navigate to course-specific chat page
       navigate(`/course/${course.id}/learn`);
     } catch (err) {
       console.error('Failed to start course:', err);
-      alert('Failed to start course. Please try again.');
+      toast.error('Failed to start course. Please try again.');
     } finally {
       setStarting(false);
     }
@@ -84,14 +105,28 @@ export default function CourseDetailPage() {
           <h1 className="text-3xl font-bold mb-2">{course.name}</h1>
           <p className="text-gray-600 mb-4">{course.description}</p>
 
-          {/* Start Course Button */}
-          <button
-            onClick={handleStartCourse}
-            disabled={starting}
-            className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {starting ? 'Starting...' : '🚀 Start Course'}
-          </button>
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleStartCourse}
+              disabled={starting}
+              className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {starting ? 'Starting...' : '🚀 Start Course'}
+            </button>
+            <button
+              onClick={handleToggleBookmark}
+              disabled={bookmarkLoading}
+              title={bookmarked ? 'Remove bookmark' : 'Bookmark this course'}
+              className={`px-4 py-3 rounded-lg font-medium border transition-colors disabled:opacity-50 ${
+                bookmarked
+                  ? 'bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100'
+                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {bookmarked ? '🔖 Saved' : '🔖 Save'}
+            </button>
+          </div>
         </div>
 
         {/* Course Details */}

@@ -3,10 +3,13 @@ import { persist } from 'zustand/middleware';
 import { authService } from '../services/authService';
 import type { AuthResponse } from '../services/authService';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   userName: string;
+  role: string;
+  organizationId?: number | null;
+  hasGoogleLogin?: boolean;
 }
 
 interface AuthState {
@@ -16,7 +19,7 @@ interface AuthState {
   isLoading: boolean;
 
   login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, inviteToken?: string) => Promise<boolean>;
   logout: () => void;
   setAuth: (data: AuthResponse) => void;
 }
@@ -57,10 +60,10 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (email: string, password: string) => {
+      register: async (email: string, password: string, inviteToken?: string) => {
         set({ isLoading: true });
         try {
-          const data = await authService.register({ email, password });
+          const data = await authService.register({ email, password, inviteToken });
           localStorage.setItem('token', data.token);
           set({
             user: data.user,

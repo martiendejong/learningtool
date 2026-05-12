@@ -173,6 +173,32 @@ public class UserController : ControllerBase
         return Ok(new { message = "User deleted successfully" });
     }
 
+    // DELETE /api/user/me — self-service account deletion
+    [HttpDelete("me")]
+    [Authorize]
+    public async Task<IActionResult> DeleteSelf([FromBody] DeleteSelfRequest request)
+    {
+        var userId = _userManager.GetUserId(User);
+        var user = await _userManager.FindByIdAsync(userId!);
+        if (user == null) return Unauthorized();
+
+        // Verify password if the account has one (Google-only accounts skip this)
+        if (await _userManager.HasPasswordAsync(user))
+        {
+            if (string.IsNullOrWhiteSpace(request.Password))
+                return BadRequest(new { message = "Password is required" });
+
+            if (!await _userManager.CheckPasswordAsync(user, request.Password))
+                return BadRequest(new { message = "Incorrect password" });
+        }
+
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+            return BadRequest(new { message = "Account deletion failed" });
+
+        return Ok(new { message = "Account deleted" });
+    }
+
     // GET /api/user/roles - Get available roles
     [HttpGet("roles")]
     [Authorize(Roles = "SYSTEMADMIN")]
@@ -220,3 +246,4 @@ public class UserController : ControllerBase
 
 public record CreateUserRequest(string Email, string Password, string? Role = "INDIVIDUAL", int? OrganizationId = null);
 public record UpdateUserRequest(string? Email = null, string? Password = null, string? Role = null, int? OrganizationId = null);
+public record DeleteSelfRequest(string? Password = null);

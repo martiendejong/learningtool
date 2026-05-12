@@ -333,6 +333,76 @@ public class AuthController : ControllerBase
         });
     }
 
+    // ── Password reset ────────────────────────────────────────────────────────
+
+    // POST /auth/forgot-password
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return BadRequest(new { message = "Email is required" });
+
+        // Always return 200 to prevent user enumeration
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user != null)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var frontendUrl = _configuration["Frontend:Url"] ?? "http://localhost:5173";
+            var resetUrl = $"{frontendUrl}/reset-password?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(token)}";
+            await _email.SendPasswordResetAsync(user.Email!, resetUrl);
+        }
+
+        return Ok(new { message = "If that email is registered, a reset link has been sent." });
+    }
+
+    // POST /auth/reset-password
+    [HttpPost("reset-password")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) ||
+            string.IsNullOrWhiteSpace(request.Token) ||
+            string.IsNullOrWhiteSpace(request.NewPassword))
+            return BadRequest(new { message = "All fields are required" });
+
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null)
+            return BadRequest(new { message = "Invalid request" });
+
+        var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+        if (!result.Succeeded)
+            return BadRequest(new { message = "Reset link is invalid or expired", errors = result.Errors });
+
+        // Invalidate existing sessions
+        await _userManager.UpdateSecurityStampAsync(user);
+        return Ok(new { message = "Password reset successful. You can now log in." });
+    }
+
+    // POST /auth/change-password  — requires active session
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            return BadRequest(new { message = "Both current and new password are required" });
+
+        if (request.NewPassword.Length < 6)
+            return BadRequest(new { message = "New password must be at least 6 characters" });
+
+        var userId = _userManager.GetUserId(User);
+        var user = await _userManager.FindByIdAsync(userId!);
+        if (user == null) return Unauthorized();
+
+        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+            return BadRequest(new { message = "Current password is incorrect", errors = result.Errors });
+
+        await _userManager.UpdateSecurityStampAsync(user);
+        var newToken = await GenerateJwtToken(user);
+        return Ok(new { message = "Password changed successfully", token = newToken });
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<string> GenerateJwtToken(ApplicationUser user)
@@ -392,3 +462,6 @@ public record RegisterRequest(string Email, string Password, string? InviteToken
 public record RegisterOrganizationRequest(string Email, string Password, string OrganizationName);
 public record LoginRequest(string Email, string Password);
 public record VerifyGoogleRequest(string Email, string Code);
+public record ForgotPasswordRequest(string Email);
+public record ResetPasswordRequest(string Email, string Token, string NewPassword);
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);

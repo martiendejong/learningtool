@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
 export default function RegisterPage() {
@@ -9,6 +9,8 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const { register, isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite') ?? undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,11 +26,11 @@ export default function RegisterPage() {
       return;
     }
 
-    const success = await register(email, password);
+    const success = await register(email, password, inviteToken);
     if (success) {
       navigate('/chat');
     } else {
-      setError('Registration failed. Email may already be in use.');
+      setError('Registration failed. Email may already be in use or invite link is invalid.');
     }
   };
 
@@ -45,7 +47,12 @@ export default function RegisterPage() {
           <p className="text-sm text-gray-600">Empowering through education</p>
         </div>
 
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800">Create Your Account</h2>
+        <h2 className="text-2xl font-semibold mb-2 text-gray-800">Create Your Account</h2>
+        {inviteToken && (
+          <div className="mb-4 px-3 py-2 bg-green-50 border border-green-200 text-green-700 rounded text-sm">
+            ✓ Joining via organization invite
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
