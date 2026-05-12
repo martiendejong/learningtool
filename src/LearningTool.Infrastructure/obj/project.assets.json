@@ -2639,11 +2639,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\projects\\learningtool\\src\\LearningTool.Infrastructure\\LearningTool.Infrastructure.csproj",
+      "projectUniqueName": "C:\\projects\\learningtool-snippets-869cenjyz\\src\\LearningTool.Infrastructure\\LearningTool.Infrastructure.csproj",
       "projectName": "LearningTool.Infrastructure",
-      "projectPath": "C:\\projects\\learningtool\\src\\LearningTool.Infrastructure\\LearningTool.Infrastructure.csproj",
+      "projectPath": "C:\\projects\\learningtool-snippets-869cenjyz\\src\\LearningTool.Infrastructure\\LearningTool.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\marti\\.nuget\\packages\\",
-      "outputPath": "C:\\projects\\learningtool\\src\\LearningTool.Infrastructure\\obj\\",
+      "outputPath": "C:\\projects\\learningtool-snippets-869cenjyz\\src\\LearningTool.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -2664,11 +2664,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\projects\\learningtool\\src\\LearningTool.Application\\LearningTool.Application.csproj": {
-              "projectPath": "C:\\projects\\learningtool\\src\\LearningTool.Application\\LearningTool.Application.csproj"
+            "C:\\projects\\learningtool-snippets-869cenjyz\\src\\LearningTool.Application\\LearningTool.Application.csproj": {
+              "projectPath": "C:\\projects\\learningtool-snippets-869cenjyz\\src\\LearningTool.Application\\LearningTool.Application.csproj"
             },
-            "C:\\projects\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj": {
-              "projectPath": "C:\\projects\\learningtool\\src\\LearningTool.Domain\\LearningTool.Domain.csproj"
+            "C:\\projects\\learningtool-snippets-869cenjyz\\src\\LearningTool.Domain\\LearningTool.Domain.csproj": {
+              "projectPath": "C:\\projects\\learningtool-snippets-869cenjyz\\src\\LearningTool.Domain\\LearningTool.Domain.csproj"
             }
           }
         }

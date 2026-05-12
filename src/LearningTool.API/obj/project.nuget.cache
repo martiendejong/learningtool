@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "wqoBZ6ljUdE=",
+  "dgSpecHash": "2HTsPnoxI9o=",
   "success": true,
-  "projectFilePath": "C:\\projects\\learningtool\\src\\LearningTool.API\\LearningTool.API.csproj",
+  "projectFilePath": "C:\\projects\\learningtool-snippets-869cenjyz\\src\\LearningTool.API\\LearningTool.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\marti\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\marti\\.nuget\\packages\\microsoft.aspnetcore.authentication.google\\8.0.0\\microsoft.aspnetcore.authentication.google.8.0.0.nupkg.sha512",
